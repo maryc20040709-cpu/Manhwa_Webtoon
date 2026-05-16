@@ -1,2 +1,19 @@
-import random\n\nclass ScriptGenerator:\n    def __init__(self, title, characters):\n        self.title = title\n        self.characters = characters\n\n    def generate_dramatic_recap(self):\n        recap_templates = [\n            f"In the latest episode of '{{self.title}}', {{random.choice(self.characters)}} faces a challenging dilemma that could change everything.",\n            f"This week, tensions rise as {{random.choice(self.characters)}} needs to make a crucial decision regarding their future.",\n            f"The stakes have never been higher in '{{self.title}}', with {{random.choice(self.characters)}} caught between friendships and rivalries.",\n            f"Emotions run high in the latest chapter, as {{random.choice(self.characters)}} struggles with personal conflicts that impact their relationships."
-        ]\n        return random.choice(recap_templates)\n
+import random
+
+
+class ScriptGenerator:
+    def __init__(self, title, characters):
+        self.title = title
+        self.characters = characters
+
+    def generate_dramatic_recap(self):
+        if not self.characters:
+            return f"In the latest episode of '{self.title}', the story continues..."
+
+        recap_templates = [
+            f"In the latest episode of '{self.title}', {random.choice(self.characters)} faces a challenging dilemma that could change everything.",
+            f"This week, tensions rise as {random.choice(self.characters)} needs to make a crucial decision regarding their future.",
+            f"The stakes have never been higher in '{self.title}', with {random.choice(self.characters)} caught between friendships and rivalries.",
+            f"Emotions run high in the latest chapter, as {random.choice(self.characters)} struggles with personal conflicts that impact their relationships.",
+        ]
+        return random.choice(recap_templates)
