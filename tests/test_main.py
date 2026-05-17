@@ -64,3 +64,22 @@ def test_scenes_empty_panels():
     assert response.status_code == 200
     data = response.json()
     assert data["total_scenes"] == 0
+
+def test_panels_upload():
+    import numpy as np
+    import cv2
+    import io
+    img = np.ones((400, 600, 3), dtype=np.uint8) * 240
+    cv2.rectangle(img, (20, 20), (280, 180), (0, 0, 0), 3)
+    cv2.rectangle(img, (320, 20), (580, 180), (0, 0, 0), 3)
+    cv2.rectangle(img, (20, 220), (580, 380), (0, 0, 0), 3)
+    _, buffer = cv2.imencode('.jpg', img)
+    image_bytes = io.BytesIO(buffer.tobytes())
+    response = client.post(
+        "/panels",
+        files={"file": ("test.jpg", image_bytes, "image/jpeg")}
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert "panels_found" in data
+    assert data["panels_found"] > 0
