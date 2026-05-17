@@ -22,18 +22,19 @@ class ScenesRequest(BaseModel):
     panels: list[Panel]
     row_threshold: int = 50
 
+class AnalyzeRequest(BaseModel):
+    title: str
+    characters: list[str]
+    row_threshold: int = 50
+
 @app.get("/")
 async def root():
     return {"message": "Welcome to the Manhwa Webtoon API!"}
 
 @app.post("/recap")
 async def generate_recap(request: RecapRequest):
-    generator = ScriptGenerator(
-        title=request.title,
-        characters=request.characters
-    )
-    recap = generator.generate_dramatic_recap()
-    return {"recap": recap}
+    generator = ScriptGenerator(title=request.title, characters=request.characters)
+    return {"recap": generator.generate_dramatic_recap()}
 
 @app.post("/scenes")
 async def group_scenes(request: ScenesRequest):
@@ -45,8 +46,7 @@ async def group_scenes(request: ScenesRequest):
 @app.post("/panels")
 async def detect_panels(file: UploadFile = File(...), min_area: int = 500):
     with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
-        contents = await file.read()
-        tmp.write(contents)
+        tmp.write(await file.read())
         tmp_path = tmp.name
     try:
         detector = PanelDetector(min_area=min_area)
@@ -55,6 +55,34 @@ async def detect_panels(file: UploadFile = File(...), min_area: int = 500):
             "filename": file.filename,
             "panels_found": len(panels),
             "panels": [{"x": p[0], "y": p[1], "w": p[2], "h": p[3]} for p in panels]
+        }
+    finally:
+        os.unlink(tmp_path)
+
+@app.post("/analyze")
+async def analyze(
+    file: UploadFile = File(...),
+    title: str = "Unknown",
+    characters: str = "",
+    min_area: int = 500,
+    row_threshold: int = 50
+):
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
+        tmp.write(await file.read())
+        tmp_path = tmp.name
+    try:
+        detector = PanelDetector(min_area=min_area)
+        panels = detector.detect_panels(tmp_path)
+        grouper = SceneGrouper(row_threshold=row_threshold)
+        scenes = grouper.group_scenes(panels)
+        chars = [c.strip() for c in characters.split(",") if c.strip()]
+        generator = ScriptGenerator(title=title, characters=chars)
+        recap = generator.generate_dramatic_recap()
+        return {
+            "filename": file.filename,
+            "panels_found": len(panels),
+            "total_scenes": len(scenes),
+            "recap": recap
         }
     finally:
         os.unlink(tmp_path)
