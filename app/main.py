@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, HTTPException
 from pydantic import BaseModel
 from app.core.script_generator import ScriptGenerator
 from app.core.scene_grouper import SceneGrouper
@@ -45,8 +45,13 @@ async def group_scenes(request: ScenesRequest):
 
 @app.post("/panels")
 async def detect_panels(file: UploadFile = File(...), min_area: int = 500):
+    if file.content_type not in ["image/jpeg", "image/png"]:
+        raise HTTPException(status_code=400, detail="Only JPG/PNG files allowed")
+    data = await file.read()
+    if len(data) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="File too large. Max 5MB")
     with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
-        tmp.write(await file.read())
+        tmp.write(data)
         tmp_path = tmp.name
     try:
         detector = PanelDetector(min_area=min_area)
@@ -67,8 +72,13 @@ async def analyze(
     min_area: int = 500,
     row_threshold: int = 50
 ):
+    if file.content_type not in ["image/jpeg", "image/png"]:
+        raise HTTPException(status_code=400, detail="Only JPG/PNG files allowed")
+    data = await file.read()
+    if len(data) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="File too large. Max 5MB")
     with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
-        tmp.write(await file.read())
+        tmp.write(data)
         tmp_path = tmp.name
     try:
         detector = PanelDetector(min_area=min_area)
