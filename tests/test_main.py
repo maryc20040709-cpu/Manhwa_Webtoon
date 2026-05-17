@@ -40,3 +40,27 @@ def test_recap_missing_characters():
         "title": "Tower of God"
     })
     assert response.status_code == 422
+
+def test_scenes_basic():
+    response = client.post("/scenes", json={
+        "panels": [
+            {"x": 10, "y": 20, "w": 200, "h": 150},
+            {"x": 220, "y": 25, "w": 200, "h": 150},
+            {"x": 10, "y": 300, "w": 200, "h": 150}
+        ],
+        "row_threshold": 50
+    })
+    assert response.status_code == 200
+    data = response.json()
+    assert "scenes" in data
+    assert "total_scenes" in data
+    assert data["total_scenes"] == 2
+
+def test_scenes_empty_panels():
+    response = client.post("/scenes", json={
+        "panels": [],
+        "row_threshold": 50
+    })
+    assert response.status_code == 200
+    data = response.json()
+    assert data["total_scenes"] == 0
