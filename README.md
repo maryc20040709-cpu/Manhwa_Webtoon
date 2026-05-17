@@ -4,12 +4,14 @@ A FastAPI-based REST API for analyzing Manhwa and Webtoon content using computer
 
 ## ✨ Features
 
-- **Panel Detector** — identifies and extracts individual panels from Manhwa/Webtoon pages
-- **Scene Grouper** — groups related panels into coherent scenes
-- **Vision Analyzer** — analyzes visual content of panels
-- **Script Generator** — auto-generates dramatic episode recap text
+- **Panel Detector** — detects panels in Manhwa images using OpenCV (computer vision)
+- **Scene Grouper** — groups panels into scenes by vertical position
+- **Script Generator** — generates dramatic episode recap text
+- **FastAPI** — fast, modern Python web framework with automatic Swagger docs
+- **File Upload** — upload images directly to the API
 
-## 🗂️ Project StructureManhwa_Webtoon/
+## 🗂️ Project Structure
+Manhwa_Webtoon/
 ├── app/
 │   ├── main.py
 │   ├── config.py
@@ -18,11 +20,17 @@ A FastAPI-based REST API for analyzing Manhwa and Webtoon content using computer
 │       ├── scene_grouper.py
 │       ├── script_generator.py
 │       └── vision_analyzer.py
-└── README.md
+├── tests/
+│   ├── test_main.py
+│   └── test_script_generator.py
+├── .env.example
+├── .gitignore
+└── requirements.txt
 
 ## 🚀 Getting Started
 
 ### Prerequisites
+
 - Python 3.10+
 - pip
 
@@ -37,25 +45,27 @@ pip install -r requirements.txt
 ### Run the App
 
 ```bash
-uvicorn app.main:app --reload
+python3 -m uvicorn app.main:app --reload
 ```
 
-API: http://localhost:8000  
-Swagger docs: http://localhost:8000/docs
+API: `http://localhost:8000` | Swagger UI: `http://localhost:8000/docs`
 
 ## 📡 API Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET    | `/`      | Health check |
+| GET | `/` | Health check |
+| POST | `/recap` | Generate dramatic episode recap |
+| POST | `/scenes` | Group panels into scenes |
+| POST | `/panels` | Detect panels in uploaded image |
 
-## 🗺️ Roadmap
+## 🧪 Tests
 
-- [ ] Fix f-string bug in script_generator.py
-- [ ] Connect core modules to API endpoints
-- [ ] Add requirements.txt and .env.example
-- [ ] Add tests (pytest)
-- [ ] LLM integration for smarter recaps
+```bash
+python3 -m pytest tests/ -v
+```
+
+12 tests — all passing ✅
 
 ## 📄 License
 
