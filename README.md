@@ -1,4 +1,5 @@
 # 📖 Manhwa Webtoon API
+![CI](https://github.com/maryc20040709-cpu/Manhwa_Webtoon/actions/workflows/ci.yml/badge.svg)
 
 A FastAPI-based REST API for analyzing Manhwa and Webtoon content using computer vision — detecting panels, grouping scenes, and generating dramatic episode recaps.
 
@@ -58,6 +59,19 @@ API: `http://localhost:8000` | Swagger UI: `http://localhost:8000/docs`
 | POST | `/recap` | Generate dramatic episode recap |
 | POST | `/scenes` | Group panels into scenes |
 | POST | `/panels` | Detect panels in uploaded image |
+| POST | `/analyze` | Full analysis: panels + scenes + recap |
+## 🔍 Example Response
+
+`POST /analyze` with `test_manhwa.jpg`, title `Solo Leveling`, characters `Sung Jinwoo,Cha Hae-In`:
+
+```json
+{
+  "filename": "test_manhwa.jpg",
+  "panels_found": 5,
+  "total_scenes": 3,
+  "recap": "Emotions run high in 'Solo Leveling', as Cha Hae-In struggles with personal conflicts that impact their relationships."
+}
+```
 
 ## 🧪 Tests
 
