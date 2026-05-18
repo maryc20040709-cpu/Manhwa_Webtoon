@@ -83,3 +83,24 @@ def test_panels_upload():
     data = response.json()
     assert "panels_found" in data
     assert data["panels_found"] > 0
+
+def test_analyze_endpoint():
+    import numpy as np
+    import cv2
+    img = np.zeros((400, 300, 3), dtype=np.uint8)
+    cv2.rectangle(img, (10, 10), (140, 190), (255, 255, 255), -1)
+    cv2.rectangle(img, (160, 10), (290, 190), (255, 255, 255), -1)
+    cv2.rectangle(img, (10, 210), (290, 390), (255, 255, 255), -1)
+    _, buf = cv2.imencode('.jpg', img)
+    image_bytes = buf.tobytes()
+    response = client.post(
+        "/analyze?title=Solo+Leveling&characters=Sung+Jinwoo",
+        files={"file": ("test.jpg", image_bytes, "image/jpeg")}
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert "panels_found" in data
+    assert "total_scenes" in data
+    assert "recap" in data
+    assert data["panels_found"] > 0
+    assert "Solo Leveling" in data["recap"]
