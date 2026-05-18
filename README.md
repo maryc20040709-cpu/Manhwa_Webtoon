@@ -10,6 +10,7 @@ A FastAPI-based REST API for analyzing Manhwa and Webtoon content using computer
 - **Script Generator** — generates dramatic episode recap text
 - **FastAPI** — fast, modern Python web framework with automatic Swagger docs
 - **File Upload** — upload images directly to the API
+- - **Web Frontend** — simple HTML interface at `/static/index.html`
 
 ## 🗂️ Project Structure
 Manhwa_Webtoon/
@@ -79,7 +80,7 @@ API: `http://localhost:8000` | Swagger UI: `http://localhost:8000/docs`
 python3 -m pytest tests/ -v
 ```
 
-12 tests — all passing ✅
+16 tests — all passing ✅
 
 ## 📄 License
 
