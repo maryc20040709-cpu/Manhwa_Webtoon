@@ -104,3 +104,16 @@ def test_analyze_endpoint():
     assert "recap" in data
     assert data["panels_found"] > 0
     assert "Solo Leveling" in data["recap"]
+
+def test_analyze_invalid_file_type():
+    fake_pdf = b"%PDF-1.4 fake content"
+    response = client.post(
+        "/analyze?title=Test&characters=Hero",
+        files={"file": ("document.pdf", fake_pdf, "application/pdf")}
+    )
+    assert response.status_code == 400
+    assert "JPG" in response.json()["detail"] or "PNG" in response.json()["detail"]
+
+def test_analyze_no_file():
+    response = client.post("/analyze")
+    assert response.status_code == 422
