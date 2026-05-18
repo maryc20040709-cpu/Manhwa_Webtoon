@@ -99,4 +99,11 @@ async def analyze(
 
 
 from fastapi.staticfiles import StaticFiles
+from app.database import init_db, save_analysis, get_history
+@app.get("/history")
+def get_analysis_history(limit: int = 10):
+    """Return last N analyses from database"""
+    return get_history(limit)
+
+
 app.mount("/static", StaticFiles(directory="static"), name="static")

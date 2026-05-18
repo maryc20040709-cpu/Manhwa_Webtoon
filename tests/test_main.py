@@ -129,3 +129,10 @@ def test_analyze_large_file():
     )
     assert response.status_code == 400
     assert "large" in response.json()["detail"].lower()
+
+
+def test_history_endpoint():
+    """Test that /history returns a list"""
+    response = client.get("/history")
+    assert response.status_code == 200
+    assert isinstance(response.json(), list)
