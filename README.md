@@ -11,6 +11,7 @@ A FastAPI-based REST API for analyzing Manhwa and Webtoon content using computer
 - **FastAPI** — fast, modern Python web framework with automatic Swagger docs
 - **File Upload** — upload images directly to the API
 - - **Web Frontend** — simple HTML interface at `/static/index.html`
+- **History Database** — SQLite storage for all past analyses via `/history`
 
 ## 🗂️ Project Structure
 Manhwa_Webtoon/
