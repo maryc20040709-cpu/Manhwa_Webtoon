@@ -117,3 +117,15 @@ def test_analyze_invalid_file_type():
 def test_analyze_no_file():
     response = client.post("/analyze")
     assert response.status_code == 422
+
+
+def test_analyze_large_file():
+    """Test that files over 5MB are rejected"""
+    import io
+    large_data = b"x" * (5 * 1024 * 1024 + 1)  # 5MB + 1 byte
+    response = client.post(
+        "/analyze?title=Test&characters=Hero",
+        files={"file": ("big.jpg", io.BytesIO(large_data), "image/jpeg")}
+    )
+    assert response.status_code == 400
+    assert "large" in response.json()["detail"].lower()
