@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manhwa Webtoon API</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; background: #f5f5f5; }
+        h1 { color: #333; }
+        input, button { margin: 8px 0; padding: 8px; width: 100%; box-sizing: border-box; }
+        button { background: #4CAF50; color: white; border: none; cursor: pointer; font-size: 16px; }
+        button:hover { background: #45a049; }
+        #result { margin-top: 20px; padding: 15px; background: white; border-radius: 8px; display: none; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>📖 Manhwa Webtoon Analyzer</h1>
+    <label>Title:</label>
+    <input type="text" id="title" placeholder="e.g. Solo Leveling" value="Solo Leveling">
+    <label>Characters (comma-separated):</label>
+    <input type="text" id="characters" placeholder="e.g. Sung Jinwoo, Cha Hae-In">
+    <label>Image (JPG or PNG):</label>
+    <input type="file" id="file" accept="image/jpeg,image/png">
+    <button onclick="analyze()">Analyze</button>
+    <div id="result"></div>
+    <script>
+        async function analyze() {
+            const title = document.getElementById('title').value;
+            const characters = document.getElementById('characters').value;
+            const file = document.getElementById('file').files[0];
+            if (!file) { alert('Please select an image!'); return; }
+            const formData = new FormData();
+            formData.append('file', file);
+            const url = `/analyze?title=${encodeURIComponent(title)}&characters=${encodeURIComponent(characters)}`;
+            const result = document.getElementById('result');
+            result.style.display = 'block';
+            result.innerHTML = 'Analyzing...';
+            try {
+                const response = await fetch(url, { method: 'POST', body: formData });
+                const data = await response.json();
+                if (response.ok) {
+                    result.innerHTML = `<b>Panels found:</b> ${data.panels_found}<br><b>Scenes:</b> ${data.total_scenes}<br><b>Recap:</b> ${data.recap}`;
+                } else {
+                    result.innerHTML = `<span class="error">Error: ${data.detail}</span>`;
+                }
+            } catch (e) {
+                result.innerHTML = `<span class="error">Connection error. Is the server running?</span>`;
+            }
+        }
+    </script>
+</body>
+</html>
