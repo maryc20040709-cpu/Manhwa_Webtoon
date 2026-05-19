@@ -1,53 +1,143 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manhwa Webtoon API</title>
-    <style>
-        body { font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; background: #f5f5f5; }
-        h1 { color: #333; }
-        input, button { margin: 8px 0; padding: 8px; width: 100%; box-sizing: border-box; }
-        button { background: #4CAF50; color: white; border: none; cursor: pointer; font-size: 16px; }
-        button:hover { background: #45a049; }
-        #result { margin-top: 20px; padding: 15px; background: white; border-radius: 8px; display: none; }
-        .error { color: red; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manhwa Webtoon Analyzer</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f5f4fa;min-height:100vh;color:#1a1a2e}
+.app{max-width:600px;margin:0 auto;padding:2rem 1rem 3rem}
+.header{text-align:center;padding:2rem 0 1.75rem}
+.logo-row{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:.5rem}
+.logo-icon{width:42px;height:42px;background:#EEEDFE;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px}
+.app-title{font-size:22px;font-weight:600;color:#1a1a2e}
+.app-sub{font-size:14px;color:#6b6b80;margin-top:4px}
+.card{background:#fff;border:1px solid #e8e6f0;border-radius:16px;padding:1.5rem;margin-bottom:1rem}
+.drop-zone{border:2px dashed #c4c0e8;border-radius:12px;padding:2.5rem 1rem;text-align:center;background:#faf9ff;margin-bottom:1.25rem;cursor:pointer;transition:border-color .2s,background .2s}
+.drop-zone:hover,.drop-zone.dragover{border-color:#534AB7;background:#EEEDFE}
+.drop-icon{font-size:36px;margin-bottom:.5rem}
+.drop-text{font-size:14px;color:#534AB7;font-weight:500}
+.drop-hint{font-size:12px;color:#9b98b8;margin-top:4px}
+.drop-filename{font-size:13px;color:#534AB7;margin-top:8px;font-weight:500}
+#fileInput{display:none}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1rem}
+.field label{font-size:13px;color:#6b6b80;display:block;margin-bottom:6px}
+.field input{width:100%;padding:9px 12px;border:1px solid #ddd9f0;border-radius:8px;font-size:14px;color:#1a1a2e;background:#fff;outline:none;transition:border-color .2s}
+.field input:focus{border-color:#534AB7}
+.btn-analyze{width:100%;padding:13px;background:#534AB7;color:white;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .2s,transform .1s}
+.btn-analyze:hover{background:#4239a0}
+.btn-analyze:active{transform:scale(.98)}
+.btn-analyze:disabled{background:#a9a4d8;cursor:not-allowed}
+.spinner{width:18px;height:18px;border:2px solid rgba(255,255,255,.4);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.results-section{display:none}
+.results-section.visible{display:block}
+.section-label{font-size:12px;font-weight:600;color:#9b98b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:1rem}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem}
+.stat{background:#faf9ff;border:1px solid #e8e6f0;border-radius:10px;padding:1rem 1.1rem}
+.stat-label{font-size:12px;color:#9b98b8;margin-bottom:6px}
+.stat-value{font-size:28px;font-weight:600;color:#534AB7}
+.recap-box{background:#EEEDFE;border-radius:10px;padding:1rem 1.25rem}
+.recap-label{font-size:12px;color:#534AB7;font-weight:600;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em}
+.recap-text{font-size:14px;color:#3C3489;line-height:1.65}
+.error-box{background:#fff0f0;border:1px solid #ffc5c5;border-radius:10px;padding:1rem 1.25rem;color:#c0392b;font-size:14px;display:none;margin-top:.75rem}
+.error-box.visible{display:block}
+.history-section{display:none}
+.history-section.visible{display:block}
+.section-title{font-size:15px;font-weight:600;color:#1a1a2e;margin-bottom:1rem;display:flex;align-items:center;gap:7px}
+.section-title span{color:#534AB7;font-size:18px}
+.history-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #f0eef8}
+.history-item:last-child{border-bottom:none}
+.hist-icon{width:34px;height:34px;background:#EEEDFE;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.hist-info{flex:1;min-width:0}
+.hist-title{font-size:14px;font-weight:500;color:#1a1a2e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hist-meta{font-size:12px;color:#9b98b8}
+.hist-badge{font-size:11px;background:#EEEDFE;color:#534AB7;padding:3px 9px;border-radius:20px;font-weight:500;flex-shrink:0}
+.empty-hist{font-size:14px;color:#9b98b8;text-align:center;padding:1rem 0}
+</style>
 </head>
 <body>
-    <h1>📖 Manhwa Webtoon Analyzer</h1>
-    <label>Title:</label>
-    <input type="text" id="title" placeholder="e.g. Solo Leveling" value="Solo Leveling">
-    <label>Characters (comma-separated):</label>
-    <input type="text" id="characters" placeholder="e.g. Sung Jinwoo, Cha Hae-In">
-    <label>Image (JPG or PNG):</label>
-    <input type="file" id="file" accept="image/jpeg,image/png">
-    <button onclick="analyze()">Analyze</button>
-    <div id="result"></div>
-    <script>
-        async function analyze() {
-            const title = document.getElementById('title').value;
-            const characters = document.getElementById('characters').value;
-            const file = document.getElementById('file').files[0];
-            if (!file) { alert('Please select an image!'); return; }
-            const formData = new FormData();
-            formData.append('file', file);
-            const url = `/analyze?title=${encodeURIComponent(title)}&characters=${encodeURIComponent(characters)}`;
-            const result = document.getElementById('result');
-            result.style.display = 'block';
-            result.innerHTML = 'Analyzing...';
-            try {
-                const response = await fetch(url, { method: 'POST', body: formData });
-                const data = await response.json();
-                if (response.ok) {
-                    result.innerHTML = `<b>Panels found:</b> ${data.panels_found}<br><b>Scenes:</b> ${data.total_scenes}<br><b>Recap:</b> ${data.recap}`;
-                } else {
-                    result.innerHTML = `<span class="error">Error: ${data.detail}</span>`;
-                }
-            } catch (e) {
-                result.innerHTML = `<span class="error">Connection error. Is the server running?</span>`;
-            }
-        }
-    </script>
+<div class="app">
+  <div class="header">
+    <div class="logo-row">
+      <div class="logo-icon">&#128214;</div>
+      <span class="app-title">Manhwa Webtoon Analyzer</span>
+    </div>
+    <div class="app-sub">Upload a panel image &mdash; get instant AI analysis</div>
+  </div>
+  <div class="card">
+    <div class="drop-zone" id="dropZone">
+      <div class="drop-icon">&#9729;&#65039;</div>
+      <div class="drop-text">Drop your image here, or click to browse</div>
+      <div class="drop-hint">JPG or PNG &middot; max 5 MB</div>
+      <div class="drop-filename" id="dropFilename"></div>
+    </div>
+    <input type="file" id="fileInput" accept="image/jpeg,image/png">
+    <div class="field-row">
+      <div class="field"><label>Manhwa title</label><input type="text" id="titleInput" placeholder="e.g. Solo Leveling"></div>
+      <div class="field"><label>Characters</label><input type="text" id="charsInput" placeholder="e.g. Sung Jinwoo"></div>
+    </div>
+    <button class="btn-analyze" id="analyzeBtn" onclick="analyze()">&#10024; Analyze</button>
+    <div class="error-box" id="errorBox"></div>
+  </div>
+  <div class="card results-section" id="resultsSection">
+    <div class="section-label">Analysis result</div>
+    <div class="stats-grid">
+      <div class="stat"><div class="stat-label">Panels found</div><div class="stat-value" id="panelsVal">&mdash;</div></div>
+      <div class="stat"><div class="stat-label">Total scenes</div><div class="stat-value" id="scenesVal">&mdash;</div></div>
+    </div>
+    <div class="recap-box">
+      <div class="recap-label">Story recap</div>
+      <div class="recap-text" id="recapText">&mdash;</div>
+    </div>
+  </div>
+  <div class="card history-section" id="historySection">
+    <div class="section-title"><span>&#128344;</span> Recent analyses</div>
+    <div id="historyList"><div class="empty-hist">No analyses yet</div></div>
+  </div>
+</div>
+<script>
+const dropZone=document.getElementById("dropZone"),fileInput=document.getElementById("fileInput"),dropFilename=document.getElementById("dropFilename");
+let selectedFile=null;
+dropZone.addEventListener("click",()=>fileInput.click());
+dropZone.addEventListener("dragover",e=>{e.preventDefault();dropZone.classList.add("dragover")});
+dropZone.addEventListener("dragleave",()=>dropZone.classList.remove("dragover"));
+dropZone.addEventListener("drop",e=>{e.preventDefault();dropZone.classList.remove("dragover");const f=e.dataTransfer.files[0];if(f)setFile(f)});
+fileInput.addEventListener("change",()=>{if(fileInput.files[0])setFile(fileInput.files[0])});
+function setFile(f){selectedFile=f;dropFilename.textContent="✅ "+f.name}
+async function analyze(){
+  const title=document.getElementById("titleInput").value.trim()||"Unknown";
+  const chars=document.getElementById("charsInput").value.trim()||"Unknown";
+  const btn=document.getElementById("analyzeBtn");
+  const errBox=document.getElementById("errorBox");
+  errBox.classList.remove("visible");
+  if(!selectedFile){showError("Please select an image first.");return}
+  btn.disabled=true;btn.innerHTML="<div class=\"spinner\"></div> Analyzing...";
+  const form=new FormData();form.append("file",selectedFile);
+  try{
+    const res=await fetch("/analyze?title="+encodeURIComponent(title)+"&characters="+encodeURIComponent(chars),{method:"POST",body:form});
+    const data=await res.json();
+    if(!res.ok){showError(data.detail||"Something went wrong.");return}
+    document.getElementById("panelsVal").textContent=data.panels_found;
+    document.getElementById("scenesVal").textContent=data.total_scenes;
+    document.getElementById("recapText").textContent=data.recap;
+    document.getElementById("resultsSection").classList.add("visible");
+    loadHistory();
+  }catch(e){showError("Cannot connect to server. Is it running?")}
+  finally{btn.disabled=false;btn.innerHTML="&#10024; Analyze"}
+}
+function showError(msg){const b=document.getElementById("errorBox");b.textContent="⚠️ "+msg;b.classList.add("visible")}
+async function loadHistory(){
+  try{
+    const res=await fetch("/history?limit=5");const data=await res.json();
+    const list=document.getElementById("historyList");
+    document.getElementById("historySection").classList.add("visible");
+    if(!data.length){list.innerHTML="<div class=\"empty-hist\">No analyses yet</div>";return}
+    list.innerHTML=data.map(item=>"<div class=\"history-item\"><div class=\"hist-icon\">&#128214;</div><div class=\"hist-info\"><div class=\"hist-title\">"+item.title+"</div><div class=\"hist-meta\">"+item.panels_found+" panels &middot; "+item.total_scenes+" scenes</div></div><span class=\"hist-badge\">done</span></div>").join("")
+  }catch(e){}
+}
+loadHistory();
+</script>
 </body>
 </html>
