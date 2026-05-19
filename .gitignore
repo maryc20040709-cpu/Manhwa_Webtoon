@@ -3,3 +3,7 @@ __pycache__/
 *.jpg
 *.png
 __pycache__/
+history.db
+update_readme.py
+fix_db.py
+write_html.py
