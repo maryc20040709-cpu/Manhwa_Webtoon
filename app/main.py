@@ -27,18 +27,12 @@ class ScenesRequest(BaseModel):
     panels: list[Panel]
     row_threshold: int = 50
 
-class AnalyzeRequest(BaseModel):
-    title: str
-    characters: list[str]
-    row_threshold: int = 50
-
 @app.get("/")
 async def root():
     return {"message": "Welcome to the Manhwa Webtoon API!"}
 
 @app.get("/stats")
 def get_stats():
-    """Return global stats: total analyses performed"""
     return {"total_analyses": get_total_count()}
 
 @app.post("/recap")
@@ -61,16 +55,12 @@ async def detect_panels(file: UploadFile = File(...), min_area: int = 500):
     if len(data) > 5 * 1024 * 1024:
         raise HTTPException(status_code=400, detail="File too large. Max 5MB")
     with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
-        tmp.write(data)
-        tmp_path = tmp.name
+        tmp.write(data); tmp_path = tmp.name
     try:
         detector = PanelDetector(min_area=min_area)
         panels = detector.detect_panels(tmp_path)
-        return {
-            "filename": file.filename,
-            "panels_found": len(panels),
-            "panels": [{"x": p[0], "y": p[1], "w": p[2], "h": p[3]} for p in panels]
-        }
+        return {"filename": file.filename, "panels_found": len(panels),
+                "panels": [{"x": p[0], "y": p[1], "w": p[2], "h": p[3]} for p in panels]}
     finally:
         os.unlink(tmp_path)
 
@@ -79,6 +69,7 @@ async def analyze(
     file: UploadFile = File(...),
     title: str = "Unknown",
     characters: str = "",
+    lang: str = "en",
     min_area: int = 500,
     row_threshold: int = 50
 ):
@@ -88,29 +79,23 @@ async def analyze(
     if len(data) > 5 * 1024 * 1024:
         raise HTTPException(status_code=400, detail="File too large. Max 5MB")
     with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
-        tmp.write(data)
-        tmp_path = tmp.name
+        tmp.write(data); tmp_path = tmp.name
     try:
         detector = PanelDetector(min_area=min_area)
         panels = detector.detect_panels(tmp_path)
         grouper = SceneGrouper(row_threshold=row_threshold)
         scenes = grouper.group_scenes(panels)
         chars = [c.strip() for c in characters.split(",") if c.strip()]
-        generator = ScriptGenerator(title=title, characters=chars)
+        generator = ScriptGenerator(title=title, characters=chars, lang=lang)
         recap = generator.generate_dramatic_recap()
         save_analysis(title, characters, len(panels), len(scenes), recap)
-        return {
-            "filename": file.filename,
-            "panels_found": len(panels),
-            "total_scenes": len(scenes),
-            "recap": recap
-        }
+        return {"filename": file.filename, "panels_found": len(panels),
+                "total_scenes": len(scenes), "recap": recap}
     finally:
         os.unlink(tmp_path)
 
 @app.get("/history")
 def get_analysis_history(limit: int = 10):
-    """Return last N analyses from database"""
     return get_history(limit)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")

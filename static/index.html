@@ -147,8 +147,10 @@ body.dark .error-box{background:#2a1010;border-color:#6b2020;color:#f08080}
 .palette-box{margin-bottom:1rem;display:none}
 .palette-label{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
 .palette-swatches{display:flex;gap:8px;flex-wrap:wrap}
-.swatch{width:34px;height:34px;border-radius:8px;border:2px solid var(--border);cursor:pointer;transition:transform .15s,box-shadow .15s}
-.swatch:hover{transform:scale(1.18);box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.swatch-wrap{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer}
+.swatch{width:34px;height:34px;border-radius:8px;border:2px solid var(--border);transition:transform .15s,box-shadow .15s}
+.swatch-wrap:hover .swatch{transform:scale(1.12);box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.swatch-hex{font-size:9px;color:var(--muted);font-family:monospace;letter-spacing:-.3px;user-select:all}
 
 /* action row */
 .action-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -249,7 +251,7 @@ body.dark .error-box{background:#2a1010;border-color:#6b2020;color:#f08080}
     <div class="app-sub" data-i18n="app_subtitle">Upload a panel image — get instant AI analysis</div>
     <div class="counter-pill" id="counterPill" style="display:none">
       <span class="counter-num" id="counterNum">0</span>
-      <span data-i18n="total_analyses">analyses done</span>
+      <span id="counterLabel">analyses done</span>
     </div>
     <div class="lang-switcher">
       <button class="lang-btn" onclick="setLanguage('en')">EN</button>
@@ -462,7 +464,7 @@ function renderPalette(colors){
   const box=document.getElementById('paletteBox');
   document.getElementById('paletteSwatches').innerHTML=colors.map(([r,g,b])=>{
     const hex=toHex(r,g,b);
-    return`<div class="swatch" style="background:${hex}" title="${hex}" onclick="copyText('${hex}')"></div>`;
+    return`<div class="swatch-wrap" onclick="copyText('${hex}')"><div class="swatch" style="background:${hex}" title="${hex}"></div><span class="swatch-hex">${hex}</span></div>`;
   }).join('');
   box.style.display='block';
 }
@@ -471,7 +473,7 @@ function renderPalette(colors){
 const MOODS=[
   {id:'action', emoji:'⚡',keys:['fight','battle','attack','power','level','hunter','monster','dungeon','clash','weapon','enemy','combat','warrior','struggle']},
   {id:'romance',emoji:'💕',keys:['love','heart','kiss','crush','feelings','together','relationship','confess','romantic','jealous']},
-  {id:'drama',  emoji:'😤',keys:['tension','decision','crucial','conflict','betrayal','secret','confront','choice','fate','cry','tears','sacrifice']},
+  {id:'drama',  emoji:'🎭',keys:['tension','decision','crucial','conflict','betrayal','secret','confront','choice','fate','cry','tears','sacrifice']},
   {id:'mystery',emoji:'🔍',keys:['mystery','unknown','hidden','discover','clue','investigate','shadow','strange','curse','prophecy']},
   {id:'comedy', emoji:'😄',keys:['laugh','funny','joke','silly','embarrass','awkward','hilarious','chaos','accident','misunderstand']},
 ];
@@ -631,7 +633,7 @@ async function analyze(){
   const form=new FormData();
   form.append('file',selectedFile);
   try{
-    const res=await fetch('/analyze?title='+encodeURIComponent(title)+'&characters='+encodeURIComponent(chars),{method:'POST',body:form});
+    const res=await fetch('/analyze?title='+encodeURIComponent(title)+'&characters='+encodeURIComponent(chars)+'&lang='+encodeURIComponent(currentLang),{method:'POST',body:form});
     const data=await res.json();
     if(!res.ok){showError(data.detail||t('err_generic'));return;}
 
@@ -683,6 +685,16 @@ async function loadHistory(){
 }
 
 // ══ Stats counter ═════════════════════════════════════════
+function pluralAnalyses(n){
+  if(currentLang==='ru'){
+    const mod10=n%10,mod100=n%100;
+    if(mod10===1&&mod100!==11)return t('total_analyses_one');
+    if(mod10>=2&&mod10<=4&&(mod100<10||mod100>=20))return t('total_analyses_other_234');
+    return t('total_analyses_many');
+  }
+  if(n===1)return t('total_analyses_one');
+  return t('total_analyses_other');
+}
 async function loadStats(){
   try{
     const res=await fetch('/stats');
@@ -691,8 +703,10 @@ async function loadStats(){
     if(n>0){
       const pill=document.getElementById('counterPill');
       const num=document.getElementById('counterNum');
+      const lbl=document.getElementById('counterLabel');
       pill.style.display='inline-flex';
       countUp(num,n,800);
+      if(lbl)lbl.textContent=pluralAnalyses(n);
     }
   }catch(e){}
 }

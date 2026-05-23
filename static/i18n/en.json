@@ -30,5 +30,7 @@
   "about_title": "About this project",
   "about_text": "Manhwa Webtoon Analyzer uses AI to break down your favorite chapters: detects panels, groups them into scenes, generates a story recap, detects mood and extracts the colour palette — all in seconds.",
   "about_free": "Free · No sign-up · Instant results",
-  "about_close": "Got it!"
+  "about_close": "Got it!",
+  "total_analyses_one": "analysis done",
+  "total_analyses_other": "analyses done"
 }

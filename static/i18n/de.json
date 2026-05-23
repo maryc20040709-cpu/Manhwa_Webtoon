@@ -30,5 +30,7 @@
   "about_title": "Über dieses Projekt",
   "about_text": "Der Manhwa Webtoon Analyzer nutzt KI, um deine Lieblingskapitel aufzuschlüsseln: erkennt Panels, gruppiert sie zu Szenen, erstellt eine Story-Zusammenfassung, erkennt die Stimmung und extrahiert die Farbpalette — alles in Sekunden.",
   "about_free": "Kostenlos · Ohne Anmeldung · Sofortige Ergebnisse",
-  "about_close": "Verstanden!"
+  "about_close": "Verstanden!",
+  "total_analyses_one": "Analyse durchgeführt",
+  "total_analyses_other": "Analysen durchgeführt"
 }
