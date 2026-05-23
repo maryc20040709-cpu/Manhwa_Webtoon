@@ -471,11 +471,46 @@ function renderPalette(colors){
 
 // ══ Mood Detection ════════════════════════════════════════
 const MOODS=[
-  {id:'action', emoji:'⚡',keys:['fight','battle','attack','power','level','hunter','monster','dungeon','clash','weapon','enemy','combat','warrior','struggle']},
-  {id:'romance',emoji:'💕',keys:['love','heart','kiss','crush','feelings','together','relationship','confess','romantic','jealous']},
-  {id:'drama',  emoji:'🎭',keys:['tension','decision','crucial','conflict','betrayal','secret','confront','choice','fate','cry','tears','sacrifice']},
-  {id:'mystery',emoji:'🔍',keys:['mystery','unknown','hidden','discover','clue','investigate','shadow','strange','curse','prophecy']},
-  {id:'comedy', emoji:'😄',keys:['laugh','funny','joke','silly','embarrass','awkward','hilarious','chaos','accident','misunderstand']},
+  {id:'action', emoji:'⚡',keys:[
+    // EN
+    'fight','battle','attack','power','level','hunter','monster','dungeon','clash','weapon','enemy','combat','warrior','struggle',
+    // DE
+    'kampf','kämpf','angriff','macht','jäger','waffe','feind','krieger','streiten','schlacht',
+    // RU
+    'бой','битва','атака','сила','охотник','монстр','подземелье','оружие','враг','воин','борьба'
+  ]},
+  {id:'romance',emoji:'💕',keys:[
+    // EN
+    'love','heart','kiss','crush','feelings','together','relationship','confess','romantic','jealous',
+    // DE
+    'liebe','herz','kuss','verliebt','gefühle','zusammen','beziehung','geständnis','romantisch','eifersüchtig',
+    // RU
+    'любовь','сердце','поцелуй','влюбл','чувства','вместе','отношения','признание','романтичн','ревнив'
+  ]},
+  {id:'drama',  emoji:'🎭',keys:[
+    // EN
+    'tension','decision','crucial','conflict','betrayal','secret','confront','choice','fate','cry','tears','sacrifice',
+    // DE
+    'spannung','entscheidung','entscheidend','konflikt','verrat','geheimnis','schicksal','weinen','tränen','opfer','ernst','gefangen','rivalität','freundschaft','rivalit',
+    // RU
+    'напряжение','решение','конфликт','предательство','тайна','судьба','плакать','слёзы','жертва','серьёзно','соперничество','дружба','между'
+  ]},
+  {id:'mystery',emoji:'🔍',keys:[
+    // EN
+    'mystery','unknown','hidden','discover','clue','investigate','shadow','strange','curse','prophecy',
+    // DE
+    'mysterium','unbekannt','versteckt','entdecken','hinweis','ermitteln','schatten','seltsam','fluch','prophezeiung',
+    // RU
+    'тайна','неизвестн','скрытый','открыть','улика','расследовать','тень','странный','проклятие','пророчество'
+  ]},
+  {id:'comedy', emoji:'😄',keys:[
+    // EN
+    'laugh','funny','joke','silly','embarrass','awkward','hilarious','chaos','accident','misunderstand',
+    // DE
+    'lachen','lustig','witz','blöd','peinlich','chaos','unfall','missverständnis',
+    // RU
+    'смеяться','смешной','шутка','глупый','неловко','хаос','случайность','недоразумение'
+  ]},
 ];
 function detectMood(text){
   if(!text)return null;
