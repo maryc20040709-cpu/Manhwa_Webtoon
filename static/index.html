@@ -1,142 +1,651 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Manhwa Webtoon Analyzer</title>
+<link rel="icon" type="image/svg+xml" href="/static/logo.svg">
 <style>
+/* ── CSS Variables / Theming ─────────────────────────────── */
+:root {
+  --bg: #f5f4fa;
+  --card: #fff;
+  --card-border: #e8e6f0;
+  --text: #1a1a2e;
+  --sub: #6b6b80;
+  --muted: #9b98b8;
+  --accent: #534AB7;
+  --accent-hover: #4239a0;
+  --accent-light: #EEEDFE;
+  --accent-text: #3C3489;
+  --stat-bg: #faf9ff;
+  --drop-border: #c4c0e8;
+  --drop-bg: #faf9ff;
+  --drop-hover: #EEEDFE;
+  --input-border: #ddd9f0;
+  --history-border: #f0eef8;
+  --hist-icon-bg: #EEEDFE;
+  --shadow: 0 2px 18px rgba(83,74,183,0.08);
+  --toast-bg: #534AB7;
+}
+body.dark {
+  --bg: #0f0e1a;
+  --card: #1a1928;
+  --card-border: #2d2b45;
+  --text: #e8e6f8;
+  --sub: #9b98c8;
+  --muted: #6b6888;
+  --accent: #8078E0;
+  --accent-hover: #9A93EC;
+  --accent-light: #1e1d35;
+  --accent-text: #b0aae8;
+  --stat-bg: #131222;
+  --drop-border: #3d3a60;
+  --drop-bg: #131222;
+  --drop-hover: #1e1d35;
+  --input-border: #2d2b45;
+  --history-border: #2d2b45;
+  --hist-icon-bg: #1e1d35;
+  --shadow: 0 2px 18px rgba(0,0,0,0.3);
+  --toast-bg: #8078E0;
+}
+
+/* ── Reset ─────────────────────────────────────────────── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f5f4fa;min-height:100vh;color:#1a1a2e}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background:var(--bg);min-height:100vh;color:var(--text);
+  transition:background .3s,color .3s;
+}
+
+/* ── Layout ────────────────────────────────────────────── */
 .app{max-width:600px;margin:0 auto;padding:2rem 1rem 3rem}
-.header{text-align:center;padding:2rem 0 1.75rem}
-.logo-row{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:.5rem}
-.logo-icon{width:42px;height:42px;background:#EEEDFE;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px}
-.app-title{font-size:22px;font-weight:600;color:#1a1a2e}
-.app-sub{font-size:14px;color:#6b6b80;margin-top:4px}
-.card{background:#fff;border:1px solid #e8e6f0;border-radius:16px;padding:1.5rem;margin-bottom:1rem}
-.drop-zone{border:2px dashed #c4c0e8;border-radius:12px;padding:2.5rem 1rem;text-align:center;background:#faf9ff;margin-bottom:1.25rem;cursor:pointer;transition:border-color .2s,background .2s}
-.drop-zone:hover,.drop-zone.dragover{border-color:#534AB7;background:#EEEDFE}
-.drop-icon{font-size:36px;margin-bottom:.5rem}
-.drop-text{font-size:14px;color:#534AB7;font-weight:500}
-.drop-hint{font-size:12px;color:#9b98b8;margin-top:4px}
-.drop-filename{font-size:13px;color:#534AB7;margin-top:8px;font-weight:500}
+
+/* ── Header ────────────────────────────────────────────── */
+.header{text-align:center;padding:2rem 0 1.5rem;position:relative}
+.header-top{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:.5rem;position:relative}
+.app-title{font-size:22px;font-weight:700;color:var(--text);letter-spacing:-.3px}
+.logo-icon{width:46px;height:46px;flex-shrink:0;filter:drop-shadow(0 3px 10px rgba(83,74,183,0.35))}
+.app-sub{font-size:14px;color:var(--sub);margin-top:4px}
+
+/* ── Dark Toggle ───────────────────────────────────────── */
+.dark-toggle{
+  position:absolute;right:0;top:50%;transform:translateY(-50%);
+  width:40px;height:24px;background:var(--card);
+  border:1.5px solid var(--card-border);border-radius:20px;
+  cursor:pointer;display:flex;align-items:center;padding:2px 3px;
+  transition:background .3s,border-color .3s;
+}
+.dark-thumb{
+  width:18px;height:18px;border-radius:50%;
+  background:var(--muted);transition:transform .25s,background .25s;
+  display:flex;align-items:center;justify-content:center;font-size:10px;line-height:1;
+}
+body.dark .dark-thumb{transform:translateX(16px);background:var(--accent)}
+
+/* ── Lang Switcher ─────────────────────────────────────── */
+.lang-switcher{display:flex;align-items:center;justify-content:center;gap:4px;margin-top:14px}
+.lang-btn{
+  padding:4px 11px;border:1px solid var(--input-border);border-radius:20px;
+  background:transparent;font-size:12px;font-weight:500;color:var(--sub);
+  cursor:pointer;transition:all .15s;
+}
+.lang-btn:hover{border-color:var(--accent);color:var(--accent)}
+.lang-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* ── Card ──────────────────────────────────────────────── */
+.card{
+  background:var(--card);border:1px solid var(--card-border);
+  border-radius:16px;padding:1.5rem;margin-bottom:1rem;
+  box-shadow:var(--shadow);transition:background .3s,border-color .3s;
+}
+
+/* ── Drop Zone ─────────────────────────────────────────── */
+.drop-zone{
+  border:2px dashed var(--drop-border);border-radius:12px;
+  padding:2.5rem 1rem;text-align:center;background:var(--drop-bg);
+  margin-bottom:1.25rem;cursor:pointer;transition:border-color .2s,background .2s;
+}
+.drop-zone:hover,.drop-zone.dragover{border-color:var(--accent);background:var(--drop-hover)}
+.drop-icon{font-size:34px;margin-bottom:.5rem}
+.drop-text{font-size:14px;color:var(--accent);font-weight:500}
+.drop-hint{font-size:12px;color:var(--muted);margin-top:4px}
+.drop-filename{font-size:13px;color:var(--accent);margin-top:8px;font-weight:500}
 #fileInput{display:none}
+
+/* ── Fields ────────────────────────────────────────────── */
 .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1rem}
-.field label{font-size:13px;color:#6b6b80;display:block;margin-bottom:6px}
-.field input{width:100%;padding:9px 12px;border:1px solid #ddd9f0;border-radius:8px;font-size:14px;color:#1a1a2e;background:#fff;outline:none;transition:border-color .2s}
-.field input:focus{border-color:#534AB7}
-.btn-analyze{width:100%;padding:13px;background:#534AB7;color:white;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .2s,transform .1s}
-.btn-analyze:hover{background:#4239a0}
+.field label{font-size:13px;color:var(--sub);display:block;margin-bottom:6px}
+.field input{
+  width:100%;padding:9px 12px;border:1px solid var(--input-border);
+  border-radius:8px;font-size:14px;color:var(--text);background:var(--card);
+  outline:none;transition:border-color .2s,background .3s,color .3s;
+}
+.field input:focus{border-color:var(--accent)}
+
+/* ── Button ────────────────────────────────────────────── */
+.btn-analyze{
+  width:100%;padding:13px;background:var(--accent);color:#fff;
+  border:none;border-radius:10px;font-size:15px;font-weight:600;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  gap:8px;transition:background .2s,transform .1s;
+}
+.btn-analyze:hover{background:var(--accent-hover)}
 .btn-analyze:active{transform:scale(.98)}
-.btn-analyze:disabled{background:#a9a4d8;cursor:not-allowed}
-.spinner{width:18px;height:18px;border:2px solid rgba(255,255,255,.4);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite}
+.btn-analyze:disabled{opacity:.55;cursor:not-allowed}
+.spinner{
+  width:17px;height:17px;border:2px solid rgba(255,255,255,.4);
+  border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;
+}
 @keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── Error ─────────────────────────────────────────────── */
+.error-box{
+  background:#fff0f0;border:1px solid #ffc5c5;border-radius:10px;
+  padding:.9rem 1.1rem;color:#c0392b;font-size:14px;display:none;margin-top:.75rem;
+}
+body.dark .error-box{background:#2a1010;border-color:#6b2020;color:#f08080}
+.error-box.visible{display:block}
+
+/* ── Results ───────────────────────────────────────────── */
 .results-section{display:none}
 .results-section.visible{display:block}
-.section-label{font-size:12px;font-weight:600;color:#9b98b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:1rem}
-.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem}
-.stat{background:#faf9ff;border:1px solid #e8e6f0;border-radius:10px;padding:1rem 1.1rem}
-.stat-label{font-size:12px;color:#9b98b8;margin-bottom:6px}
-.stat-value{font-size:28px;font-weight:600;color:#534AB7}
-.recap-box{background:#EEEDFE;border-radius:10px;padding:1rem 1.25rem}
-.recap-label{font-size:12px;color:#534AB7;font-weight:600;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em}
-.recap-text{font-size:14px;color:#3C3489;line-height:1.65}
-.error-box{background:#fff0f0;border:1px solid #ffc5c5;border-radius:10px;padding:1rem 1.25rem;color:#c0392b;font-size:14px;display:none;margin-top:.75rem}
-.error-box.visible{display:block}
+.section-label{
+  font-size:11px;font-weight:700;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.08em;margin-bottom:1rem;
+}
+
+/* Mood */
+.mood-row{display:flex;align-items:center;gap:8px;margin-bottom:1rem}
+.mood-label{font-size:13px;color:var(--sub)}
+.mood-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:4px 12px;border-radius:20px;font-size:13px;font-weight:600;
+}
+.mood-action  {background:#fff0e6;color:#c85a00}
+.mood-romance {background:#fff0f5;color:#c8006a}
+.mood-drama   {background:#f0f0ff;color:#4a4a9a}
+.mood-mystery {background:#eef5e6;color:#3a6a00}
+.mood-comedy  {background:#fffde6;color:#8a7000}
+.mood-neutral {background:var(--accent-light);color:var(--accent)}
+body.dark .mood-action  {background:#2a1800;color:#ffa060}
+body.dark .mood-romance {background:#2a0018;color:#ff80b0}
+body.dark .mood-drama   {background:#18182a;color:#a0a0ff}
+body.dark .mood-mystery {background:#0a1a00;color:#80c840}
+body.dark .mood-comedy  {background:#1a1800;color:#d4b800}
+body.dark .mood-neutral {background:var(--accent-light);color:var(--accent)}
+
+/* Stats grid — 3 columns */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:1rem}
+.stat{
+  background:var(--stat-bg);border:1px solid var(--card-border);
+  border-radius:10px;padding:.9rem 1rem;transition:background .3s,border-color .3s;
+}
+.stat-label{font-size:11px;color:var(--muted);margin-bottom:4px;line-height:1.4}
+.stat-value{font-size:26px;font-weight:700;color:var(--accent);line-height:1.1}
+.stat-unit{font-size:12px;font-weight:400;color:var(--muted)}
+
+/* Recap */
+.recap-box{
+  background:var(--accent-light);border-radius:10px;
+  padding:1rem 1.25rem;margin-bottom:1rem;transition:background .3s;
+}
+.recap-label{font-size:11px;color:var(--accent);font-weight:700;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em}
+.recap-text{font-size:14px;color:var(--accent-text);line-height:1.7}
+
+/* Colour Palette */
+.palette-box{margin-bottom:1rem;display:none}
+.palette-label{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.palette-swatches{display:flex;gap:8px;flex-wrap:wrap}
+.swatch{
+  width:34px;height:34px;border-radius:8px;border:2px solid var(--card-border);
+  cursor:pointer;transition:transform .15s,box-shadow .15s;position:relative;
+}
+.swatch:hover{transform:scale(1.18);box-shadow:0 2px 8px rgba(0,0,0,.15)}
+
+/* Share */
+.share-btn{
+  width:100%;padding:10px;background:transparent;
+  border:1.5px solid var(--accent);border-radius:10px;
+  color:var(--accent);font-size:14px;font-weight:500;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  gap:6px;transition:background .2s;
+}
+.share-btn:hover{background:var(--accent-light)}
+
+/* ── History ───────────────────────────────────────────── */
 .history-section{display:none}
 .history-section.visible{display:block}
-.section-title{font-size:15px;font-weight:600;color:#1a1a2e;margin-bottom:1rem;display:flex;align-items:center;gap:7px}
-.section-title span{color:#534AB7;font-size:18px}
-.history-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #f0eef8}
+.section-title{font-size:15px;font-weight:600;color:var(--text);margin-bottom:1rem;display:flex;align-items:center;gap:7px}
+.history-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--history-border)}
 .history-item:last-child{border-bottom:none}
-.hist-icon{width:34px;height:34px;background:#EEEDFE;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.hist-icon{width:36px;height:36px;background:var(--hist-icon-bg);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
 .hist-info{flex:1;min-width:0}
-.hist-title{font-size:14px;font-weight:500;color:#1a1a2e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.hist-meta{font-size:12px;color:#9b98b8}
-.hist-badge{font-size:11px;background:#EEEDFE;color:#534AB7;padding:3px 9px;border-radius:20px;font-weight:500;flex-shrink:0}
-.empty-hist{font-size:14px;color:#9b98b8;text-align:center;padding:1rem 0}
+.hist-title{font-size:14px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hist-meta{font-size:12px;color:var(--muted)}
+.hist-badge{font-size:11px;background:var(--accent-light);color:var(--accent);padding:3px 9px;border-radius:20px;font-weight:500;flex-shrink:0}
+.empty-hist{font-size:14px;color:var(--muted);text-align:center;padding:1rem 0}
+
+/* ── Toast ─────────────────────────────────────────────── */
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+  background:var(--toast-bg);color:#fff;padding:9px 20px;
+  border-radius:24px;font-size:13px;font-weight:500;
+  z-index:999;pointer-events:none;
+  animation:fadeInUp .25s ease, fadeOut .3s ease 1.7s forwards;
+}
+@keyframes fadeInUp{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+@keyframes fadeOut{to{opacity:0}}
 </style>
 </head>
 <body>
 <div class="app">
+
+  <!-- ── Header ─────────────────────────────────────────── -->
   <div class="header">
-    <div class="logo-row">
-      <div class="logo-icon">&#128214;</div>
-      <span class="app-title">Manhwa Webtoon Analyzer</span>
+    <div class="header-top">
+      <!-- Logo SVG inline (better than img for dark mode clarity) -->
+      <svg class="logo-icon" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="lg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#7B72D8"/>
+            <stop offset="100%" stop-color="#3C2FA0"/>
+          </linearGradient>
+        </defs>
+        <rect width="40" height="40" rx="10" fill="url(#lg)"/>
+        <line x1="20.5" y1="3" x2="20.5" y2="37" stroke="rgba(255,255,255,0.15)" stroke-width="0.8"/>
+        <line x1="3" y1="17.5" x2="37" y2="17.5" stroke="rgba(255,255,255,0.15)" stroke-width="0.8"/>
+        <rect x="3.5" y="3.5" width="14.5" height="11.5" rx="2.5" fill="white" opacity="0.93"/>
+        <rect x="21" y="3.5" width="15.5" height="11.5" rx="2.5" fill="white" opacity="0.93"/>
+        <rect x="3.5" y="18" width="14.5" height="18.5" rx="2.5" fill="white" opacity="0.93"/>
+        <rect x="21" y="18" width="15.5" height="8.5" rx="2.5" fill="white" opacity="0.93"/>
+        <rect x="21" y="28.5" width="15.5" height="8" rx="2.5" fill="white" opacity="0.65"/>
+        <path d="M30.5 26.5 L31.6 24 L32.7 26.5 L35 27.5 L32.7 28.5 L31.6 31 L30.5 28.5 L28 27.5 Z" fill="#FFD700"/>
+      </svg>
+      <span class="app-title" data-i18n="app_title">Manhwa Webtoon Analyzer</span>
+      <button class="dark-toggle" onclick="toggleDark()" aria-label="Toggle dark mode">
+        <div class="dark-thumb" id="darkThumb">🌙</div>
+      </button>
     </div>
-    <div class="app-sub">Upload a panel image &mdash; get instant AI analysis</div>
+    <div class="app-sub" data-i18n="app_subtitle">Upload a panel image — get instant AI analysis</div>
+    <div class="lang-switcher">
+      <button class="lang-btn" onclick="setLanguage('en')">EN</button>
+      <button class="lang-btn" onclick="setLanguage('de')">DE</button>
+      <button class="lang-btn" onclick="setLanguage('ru')">РУ</button>
+    </div>
   </div>
+
+  <!-- ── Upload card ─────────────────────────────────────── -->
   <div class="card">
     <div class="drop-zone" id="dropZone">
-      <div class="drop-icon">&#9729;&#65039;</div>
-      <div class="drop-text">Drop your image here, or click to browse</div>
-      <div class="drop-hint">JPG or PNG &middot; max 5 MB</div>
+      <div class="drop-icon">☁️</div>
+      <div class="drop-text" data-i18n="drop_text">Drop your image here, or click to browse</div>
+      <div class="drop-hint" data-i18n="drop_hint">JPG or PNG · max 5 MB</div>
       <div class="drop-filename" id="dropFilename"></div>
     </div>
     <input type="file" id="fileInput" accept="image/jpeg,image/png">
     <div class="field-row">
-      <div class="field"><label>Manhwa title</label><input type="text" id="titleInput" placeholder="e.g. Solo Leveling"></div>
-      <div class="field"><label>Characters</label><input type="text" id="charsInput" placeholder="e.g. Sung Jinwoo"></div>
+      <div class="field">
+        <label data-i18n="label_title">Manhwa title</label>
+        <input type="text" id="titleInput" data-i18n-placeholder="placeholder_title" placeholder="e.g. Solo Leveling">
+      </div>
+      <div class="field">
+        <label data-i18n="label_characters">Characters</label>
+        <input type="text" id="charsInput" data-i18n-placeholder="placeholder_characters" placeholder="e.g. Sung Jinwoo">
+      </div>
     </div>
-    <button class="btn-analyze" id="analyzeBtn" onclick="analyze()">&#10024; Analyze</button>
+    <button class="btn-analyze" id="analyzeBtn" onclick="analyze()">
+      <span data-i18n="btn_analyze">✨ Analyze</span>
+    </button>
     <div class="error-box" id="errorBox"></div>
   </div>
+
+  <!-- ── Results card ────────────────────────────────────── -->
   <div class="card results-section" id="resultsSection">
-    <div class="section-label">Analysis result</div>
+    <div class="section-label" data-i18n="section_result">Analysis result</div>
+
+    <!-- Mood row -->
+    <div class="mood-row">
+      <span class="mood-label" data-i18n="label_mood">Mood</span>
+      <span class="mood-badge mood-neutral" id="moodBadge">—</span>
+    </div>
+
+    <!-- Stats: panels / scenes / read time -->
     <div class="stats-grid">
-      <div class="stat"><div class="stat-label">Panels found</div><div class="stat-value" id="panelsVal">&mdash;</div></div>
-      <div class="stat"><div class="stat-label">Total scenes</div><div class="stat-value" id="scenesVal">&mdash;</div></div>
+      <div class="stat">
+        <div class="stat-label" data-i18n="label_panels">Panels found</div>
+        <div class="stat-value" id="panelsVal">—</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label" data-i18n="label_scenes">Total scenes</div>
+        <div class="stat-value" id="scenesVal">—</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label" data-i18n="label_readtime">Read time</div>
+        <div class="stat-value" id="readtimeVal">—</div>
+      </div>
     </div>
+
+    <!-- Recap -->
     <div class="recap-box">
-      <div class="recap-label">Story recap</div>
-      <div class="recap-text" id="recapText">&mdash;</div>
+      <div class="recap-label" data-i18n="label_recap">Story recap</div>
+      <div class="recap-text" id="recapText">—</div>
+    </div>
+
+    <!-- Colour palette -->
+    <div class="palette-box" id="paletteBox">
+      <div class="palette-label" data-i18n="label_palette">Chapter colour palette</div>
+      <div class="palette-swatches" id="paletteSwatches"></div>
+    </div>
+
+    <!-- Share -->
+    <button class="share-btn" id="shareBtn" onclick="shareResult()">
+      <span>🔗</span><span data-i18n="btn_share">Share analysis</span>
+    </button>
+  </div>
+
+  <!-- ── History card ─────────────────────────────────────── -->
+  <div class="card history-section" id="historySection">
+    <div class="section-title">⏱ <span data-i18n="section_history">Recent analyses</span></div>
+    <div id="historyList">
+      <div class="empty-hist" data-i18n="empty_history">No analyses yet</div>
     </div>
   </div>
-  <div class="card history-section" id="historySection">
-    <div class="section-title"><span>&#128344;</span> Recent analyses</div>
-    <div id="historyList"><div class="empty-hist">No analyses yet</div></div>
-  </div>
-</div>
+
+</div><!-- /.app -->
+
 <script>
-const dropZone=document.getElementById("dropZone"),fileInput=document.getElementById("fileInput"),dropFilename=document.getElementById("dropFilename");
-let selectedFile=null;
-dropZone.addEventListener("click",()=>fileInput.click());
-dropZone.addEventListener("dragover",e=>{e.preventDefault();dropZone.classList.add("dragover")});
-dropZone.addEventListener("dragleave",()=>dropZone.classList.remove("dragover"));
-dropZone.addEventListener("drop",e=>{e.preventDefault();dropZone.classList.remove("dragover");const f=e.dataTransfer.files[0];if(f)setFile(f)});
-fileInput.addEventListener("change",()=>{if(fileInput.files[0])setFile(fileInput.files[0])});
-function setFile(f){selectedFile=f;dropFilename.textContent="✅ "+f.name}
-async function analyze(){
-  const title=document.getElementById("titleInput").value.trim()||"Unknown";
-  const chars=document.getElementById("charsInput").value.trim()||"Unknown";
-  const btn=document.getElementById("analyzeBtn");
-  const errBox=document.getElementById("errorBox");
-  errBox.classList.remove("visible");
-  if(!selectedFile){showError("Please select an image first.");return}
-  btn.disabled=true;btn.innerHTML="<div class=\"spinner\"></div> Analyzing...";
-  const form=new FormData();form.append("file",selectedFile);
-  try{
-    const res=await fetch("/analyze?title="+encodeURIComponent(title)+"&characters="+encodeURIComponent(chars),{method:"POST",body:form});
-    const data=await res.json();
-    if(!res.ok){showError(data.detail||"Something went wrong.");return}
-    document.getElementById("panelsVal").textContent=data.panels_found;
-    document.getElementById("scenesVal").textContent=data.total_scenes;
-    document.getElementById("recapText").textContent=data.recap;
-    document.getElementById("resultsSection").classList.add("visible");
+// ══════════════════════════════════════════════════════
+// Dark Mode
+// ══════════════════════════════════════════════════════
+function toggleDark() {
+  const on = document.body.classList.toggle('dark');
+  localStorage.setItem('mwa_dark', on ? '1' : '0');
+  document.getElementById('darkThumb').textContent = on ? '☀️' : '🌙';
+}
+// Init
+if (localStorage.getItem('mwa_dark') === '1') {
+  document.body.classList.add('dark');
+  document.getElementById('darkThumb').textContent = '☀️';
+}
+
+// ══════════════════════════════════════════════════════
+// i18n
+// ══════════════════════════════════════════════════════
+let currentLang = localStorage.getItem('mwa_lang') || 'en';
+let TR = {};
+
+async function loadLanguage(lang) {
+  try {
+    const res = await fetch(`/static/i18n/${lang}.json`);
+    if (!res.ok) throw new Error();
+    TR = await res.json();
+    currentLang = lang;
+    localStorage.setItem('mwa_lang', lang);
+    applyTR();
+    updateLangBtns();
+  } catch(e) { console.warn('i18n load failed:', lang); }
+}
+
+function t(key, vars) {
+  let s = TR[key] || key;
+  if (vars) for (const k of Object.keys(vars)) s = s.replace(`{${k}}`, vars[k]);
+  return s;
+}
+
+function applyTR() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const k = el.getAttribute('data-i18n');
+    if (el.tagName === 'INPUT') el.value = t(k); else el.innerHTML = t(k);
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    el.placeholder = t(el.getAttribute('data-i18n-placeholder'));
+  });
+  document.documentElement.lang = currentLang;
+}
+
+function updateLangBtns() {
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    const code = btn.textContent.trim().toLowerCase();
+    const match = code === currentLang || (currentLang === 'ru' && code === 'ру');
+    btn.classList.toggle('active', match);
+  });
+}
+
+function setLanguage(lang) { loadLanguage(lang); }
+
+// ══════════════════════════════════════════════════════
+// Drag & Drop
+// ══════════════════════════════════════════════════════
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+let selectedFile = null;
+
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('dragover');
+  if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', () => { if (fileInput.files[0]) setFile(fileInput.files[0]); });
+
+function setFile(f) {
+  selectedFile = f;
+  document.getElementById('dropFilename').textContent = '✅ ' + f.name;
+  extractPalette(f); // extract colours immediately on file select
+}
+
+// ══════════════════════════════════════════════════════
+// Colour Palette (Canvas API — 100% frontend)
+// ══════════════════════════════════════════════════════
+function extractPalette(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const SIZE = 100;
+      const canvas = document.createElement('canvas');
+      canvas.width = SIZE; canvas.height = SIZE;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, SIZE, SIZE);
+      const px = ctx.getImageData(0, 0, SIZE, SIZE).data;
+      const palette = pickColors(px, 5);
+      renderPalette(palette);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function pickColors(data, n) {
+  // Sample pixels, skip near-white/black, cluster by rounding
+  const buckets = {};
+  const step = 8; // sample every 8px
+  for (let i = 0; i < data.length; i += step * 4) {
+    const r = data[i], g = data[i+1], b = data[i+2];
+    const bright = (r + g + b) / 3;
+    if (bright > 235 || bright < 18) continue;
+    // Round to nearest 32 to cluster
+    const key = [r,g,b].map(v => Math.round(v/32)*32).join(',');
+    buckets[key] = (buckets[key] || 0) + 1;
+  }
+  return Object.entries(buckets)
+    .sort((a,b) => b[1]-a[1])
+    .slice(0, n)
+    .map(([k]) => k.split(',').map(Number));
+}
+
+function toHex(r,g,b) {
+  return '#' + [r,g,b].map(v => v.toString(16).padStart(2,'0')).join('');
+}
+
+function renderPalette(colors) {
+  const box = document.getElementById('paletteBox');
+  const cont = document.getElementById('paletteSwatches');
+  cont.innerHTML = colors.map(([r,g,b]) => {
+    const hex = toHex(r,g,b);
+    return `<div class="swatch" style="background:${hex}" title="${hex}" onclick="copyText('${hex}')"></div>`;
+  }).join('');
+  box.style.display = 'block';
+}
+
+// ══════════════════════════════════════════════════════
+// Mood Detection
+// ══════════════════════════════════════════════════════
+const MOODS = [
+  { id:'action',  emoji:'⚡', keys:['fight','battle','attack','power','level','hunter','monster','dungeon','clash','weapon','enemy','combat','force','warrior'] },
+  { id:'romance', emoji:'💕', keys:['love','heart','kiss','crush','feelings','together','relationship','confess','romantic','jealous','care'] },
+  { id:'drama',   emoji:'😤', keys:['tension','decision','crucial','conflict','betrayal','secret','confront','choice','fate','cry','tears','painful','sacrifice'] },
+  { id:'mystery', emoji:'🔍', keys:['mystery','unknown','hidden','discover','clue','investigate','shadow','strange','curse','prophecy','reveal'] },
+  { id:'comedy',  emoji:'😄', keys:['laugh','funny','joke','silly','embarrass','awkward','hilarious','chaos','accident','misunderstand','prank'] },
+];
+
+function detectMood(text) {
+  if (!text) return null;
+  const lower = text.toLowerCase();
+  let best = null, topScore = 0;
+  for (const m of MOODS) {
+    const score = m.keys.filter(k => lower.includes(k)).length;
+    if (score > topScore) { topScore = score; best = m; }
+  }
+  return topScore > 0 ? best : null;
+}
+
+function showMood(recap) {
+  const badge = document.getElementById('moodBadge');
+  const mood = detectMood(recap);
+  badge.className = 'mood-badge ' + (mood ? `mood-${mood.id}` : 'mood-neutral');
+  badge.textContent = mood ? `${mood.emoji} ${mood.id.charAt(0).toUpperCase()}${mood.id.slice(1)}` : '—';
+}
+
+// ══════════════════════════════════════════════════════
+// Share
+// ══════════════════════════════════════════════════════
+function shareResult() {
+  const title   = document.getElementById('titleInput').value.trim() || 'Unknown';
+  const panels  = document.getElementById('panelsVal').textContent;
+  const scenes  = document.getElementById('scenesVal').textContent;
+  const recap   = document.getElementById('recapText').textContent;
+  const mood    = document.getElementById('moodBadge').textContent;
+
+  const text =
+    `📖 ${title} — Manhwa Analysis\n` +
+    `🎭 ${t('label_mood')}: ${mood}\n` +
+    `📦 ${t('label_panels')}: ${panels}   🎬 ${t('label_scenes')}: ${scenes}\n\n` +
+    `💬 "${recap}"\n\n` +
+    `🔗 manhwa-webtoon.onrender.com`;
+
+  navigator.clipboard.writeText(text).then(() => {
+    toast('✅ Copied!');
+  }).catch(() => {
+    // fallback
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy');
+    ta.remove(); toast('✅ Copied!');
+  });
+}
+
+// ══════════════════════════════════════════════════════
+// Analyze
+// ══════════════════════════════════════════════════════
+async function analyze() {
+  const title = document.getElementById('titleInput').value.trim() || 'Unknown';
+  const chars = document.getElementById('charsInput').value.trim() || 'Unknown';
+  const btn   = document.getElementById('analyzeBtn');
+  const errBox = document.getElementById('errorBox');
+  errBox.classList.remove('visible');
+
+  if (!selectedFile) { showError(t('err_no_file')); return; }
+
+  btn.disabled = true;
+  btn.innerHTML = `<div class="spinner"></div><span>${t('btn_analyzing')}</span>`;
+
+  const form = new FormData();
+  form.append('file', selectedFile);
+
+  try {
+    const res  = await fetch(
+      '/analyze?title=' + encodeURIComponent(title) + '&characters=' + encodeURIComponent(chars),
+      { method: 'POST', body: form }
+    );
+    const data = await res.json();
+    if (!res.ok) { showError(data.detail || t('err_generic')); return; }
+
+    const panels = data.panels_found;
+    document.getElementById('panelsVal').textContent = panels;
+    document.getElementById('scenesVal').textContent = data.total_scenes;
+    document.getElementById('recapText').textContent = data.recap;
+
+    // Reading time: ~3 panels/min for webtoon
+    const mins = Math.max(1, Math.round(panels / 3));
+    document.getElementById('readtimeVal').innerHTML =
+      `${mins}<span class="stat-unit">${t('unit_min')}</span>`;
+
+    // Mood
+    showMood(data.recap);
+
+    document.getElementById('resultsSection').classList.add('visible');
     loadHistory();
-  }catch(e){showError("Cannot connect to server. Is it running?")}
-  finally{btn.disabled=false;btn.innerHTML="&#10024; Analyze"}
+  } catch(e) {
+    showError(t('err_connection'));
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = `<span data-i18n="btn_analyze">${t('btn_analyze')}</span>`;
+  }
 }
-function showError(msg){const b=document.getElementById("errorBox");b.textContent="⚠️ "+msg;b.classList.add("visible")}
-async function loadHistory(){
-  try{
-    const res=await fetch("/history?limit=5");const data=await res.json();
-    const list=document.getElementById("historyList");
-    document.getElementById("historySection").classList.add("visible");
-    if(!data.length){list.innerHTML="<div class=\"empty-hist\">No analyses yet</div>";return}
-    list.innerHTML=data.map(item=>"<div class=\"history-item\"><div class=\"hist-icon\">&#128214;</div><div class=\"hist-info\"><div class=\"hist-title\">"+item.title+"</div><div class=\"hist-meta\">"+item.panels_found+" panels &middot; "+item.total_scenes+" scenes</div></div><span class=\"hist-badge\">done</span></div>").join("")
-  }catch(e){}
+
+function showError(msg) {
+  const b = document.getElementById('errorBox');
+  b.textContent = '⚠️ ' + msg;
+  b.classList.add('visible');
 }
+
+// ══════════════════════════════════════════════════════
+// History
+// ══════════════════════════════════════════════════════
+async function loadHistory() {
+  try {
+    const res  = await fetch('/history?limit=5');
+    const data = await res.json();
+    const list = document.getElementById('historyList');
+    document.getElementById('historySection').classList.add('visible');
+    if (!data.length) {
+      list.innerHTML = `<div class="empty-hist">${t('empty_history')}</div>`;
+      return;
+    }
+    list.innerHTML = data.map(item => `
+      <div class="history-item">
+        <div class="hist-icon">📖</div>
+        <div class="hist-info">
+          <div class="hist-title">${item.title}</div>
+          <div class="hist-meta">${t('hist_meta',{panels:item.panels_found,scenes:item.total_scenes})}</div>
+        </div>
+        <span class="hist-badge">${t('badge_done')}</span>
+      </div>`).join('');
+  } catch(e) {}
+}
+
+// ══════════════════════════════════════════════════════
+// Utilities
+// ══════════════════════════════════════════════════════
+function copyText(text) {
+  navigator.clipboard.writeText(text).then(() => toast(text + ' copied'));
+}
+
+function toast(msg) {
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2200);
+}
+
+// ══════════════════════════════════════════════════════
+// Init
+// ══════════════════════════════════════════════════════
+loadLanguage(currentLang);
 loadHistory();
 </script>
 </body>

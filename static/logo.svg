@@ -1,0 +1,28 @@
+<svg viewBox="0 0 40 40" width="40" height="40" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="lg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#7B72D8"/>
+      <stop offset="100%" stop-color="#3C2FA0"/>
+    </linearGradient>
+    <filter id="glow">
+      <feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-color="#FFD700" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+  <!-- Background -->
+  <rect width="40" height="40" rx="10" fill="url(#lg)"/>
+  <!-- Subtle grid lines -->
+  <line x1="20.5" y1="3" x2="20.5" y2="37" stroke="rgba(255,255,255,0.15)" stroke-width="0.8"/>
+  <line x1="3" y1="17.5" x2="37" y2="17.5" stroke="rgba(255,255,255,0.15)" stroke-width="0.8"/>
+  <!-- Top-left panel -->
+  <rect x="3.5" y="3.5" width="14.5" height="11.5" rx="2.5" fill="white" opacity="0.93"/>
+  <!-- Top-right panel -->
+  <rect x="21" y="3.5" width="15.5" height="11.5" rx="2.5" fill="white" opacity="0.93"/>
+  <!-- Bottom-left panel (tall) -->
+  <rect x="3.5" y="18" width="14.5" height="18.5" rx="2.5" fill="white" opacity="0.93"/>
+  <!-- Bottom-right: two stacked panels -->
+  <rect x="21" y="18" width="15.5" height="8.5" rx="2.5" fill="white" opacity="0.93"/>
+  <rect x="21" y="28.5" width="15.5" height="8" rx="2.5" fill="white" opacity="0.65"/>
+  <!-- Sparkle star -->
+  <path d="M30.5 26.5 L31.6 24 L32.7 26.5 L35 27.5 L32.7 28.5 L31.6 31 L30.5 28.5 L28 27.5 Z"
+        fill="#FFD700" filter="url(#glow)"/>
+</svg>
