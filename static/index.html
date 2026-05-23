@@ -375,6 +375,7 @@ async function loadLanguage(lang){
     applyTR();
     updateLangBtns();
     loadHistory(); // always re-render history with correct language
+    reRenderResult(); // update units and mood badge language
   }catch(e){console.warn('i18n fail:',lang)}
 }
 
@@ -654,6 +655,9 @@ function wrapText(ctx,text,x,y,maxW,lineH,maxLines){
 }
 
 // ══ Analyze ══════════════════════════════════════════════
+// last result state — updated after each successful analysis
+let lastResult = null;
+
 async function analyze(){
   const title=document.getElementById('titleInput').value.trim()||'Unknown';
   const chars=document.getElementById('charsInput').value.trim()||'Unknown';
@@ -686,6 +690,10 @@ async function analyze(){
     document.getElementById('readtimeVal').innerHTML=`${mins}<span class="stat-unit">${t('unit_min')}</span>`;
     document.getElementById('recapText').textContent=data.recap;
     showMood(data.recap);
+
+    // store for language-switch re-render
+    lastResult = {panels, scenes: data.total_scenes, recap: data.recap, mins};
+
     loadHistory();
     loadStats();
   }catch(e){showError(t('err_connection'));}
@@ -695,6 +703,17 @@ async function analyze(){
 function showError(msg){
   const b=document.getElementById('errorBox');
   b.textContent='⚠️ '+msg;b.classList.add('visible');
+}
+
+// ══ Re-render result on language switch ══════════════════
+function reRenderResult(){
+  if(!lastResult) return;
+  // update read time unit
+  document.getElementById('readtimeVal').innerHTML=
+    `${lastResult.mins}<span class="stat-unit">${t('unit_min')}</span>`;
+  // re-detect mood with current language keywords
+  showMood(lastResult.recap);
+  // update section label (already done by applyTR, but recap text stays)
 }
 
 // ══ History ═══════════════════════════════════════════════
