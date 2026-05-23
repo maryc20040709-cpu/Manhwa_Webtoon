@@ -18,11 +18,17 @@
   "label_recap": "Story recap",
   "label_palette": "Chapter colour palette",
   "btn_share": "Share analysis",
+  "btn_export": "Save as image",
   "section_history": "Recent analyses",
   "empty_history": "No analyses yet",
   "err_no_file": "Please select an image first.",
   "err_generic": "Something went wrong.",
   "err_connection": "Cannot reach server.",
   "badge_done": "done",
-  "hist_meta": "{panels} panels · {scenes} scenes"
+  "hist_meta": "{panels} panels · {scenes} scenes",
+  "total_analyses": "analyses done",
+  "about_title": "About this project",
+  "about_text": "Manhwa Webtoon Analyzer uses AI to break down your favorite chapters: detects panels, groups them into scenes, generates a story recap, detects mood and extracts the colour palette — all in seconds.",
+  "about_free": "Free · No sign-up · Instant results",
+  "about_close": "Got it!"
 }

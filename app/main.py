@@ -6,7 +6,12 @@ from app.core.panel_detector import PanelDetector
 import tempfile
 import os
 
-app = FastAPI()
+app = FastAPI(title="Manhwa/Webtoon Analyzer")
+
+from fastapi.staticfiles import StaticFiles
+from app.database import init_db, save_analysis, get_history, get_total_count
+
+init_db()
 
 class RecapRequest(BaseModel):
     title: str
@@ -30,6 +35,11 @@ class AnalyzeRequest(BaseModel):
 @app.get("/")
 async def root():
     return {"message": "Welcome to the Manhwa Webtoon API!"}
+
+@app.get("/stats")
+def get_stats():
+    """Return global stats: total analyses performed"""
+    return {"total_analyses": get_total_count()}
 
 @app.post("/recap")
 async def generate_recap(request: RecapRequest):
@@ -88,6 +98,7 @@ async def analyze(
         chars = [c.strip() for c in characters.split(",") if c.strip()]
         generator = ScriptGenerator(title=title, characters=chars)
         recap = generator.generate_dramatic_recap()
+        save_analysis(title, characters, len(panels), len(scenes), recap)
         return {
             "filename": file.filename,
             "panels_found": len(panels),
@@ -97,13 +108,9 @@ async def analyze(
     finally:
         os.unlink(tmp_path)
 
-
-from fastapi.staticfiles import StaticFiles
-from app.database import init_db, save_analysis, get_history
 @app.get("/history")
 def get_analysis_history(limit: int = 10):
     """Return last N analyses from database"""
     return get_history(limit)
-
 
 app.mount("/static", StaticFiles(directory="static"), name="static")

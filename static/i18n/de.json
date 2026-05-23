@@ -18,11 +18,17 @@
   "label_recap": "Story-Zusammenfassung",
   "label_palette": "Kapitel-Farbpalette",
   "btn_share": "Analyse teilen",
+  "btn_export": "Als Bild speichern",
   "section_history": "Letzte Analysen",
   "empty_history": "Noch keine Analysen",
   "err_no_file": "Bitte zuerst ein Bild auswählen.",
   "err_generic": "Etwas ist schiefgelaufen.",
   "err_connection": "Server nicht erreichbar.",
   "badge_done": "fertig",
-  "hist_meta": "{panels} Panels · {scenes} Szenen"
+  "hist_meta": "{panels} Panels · {scenes} Szenen",
+  "total_analyses": "Analysen durchgeführt",
+  "about_title": "Über dieses Projekt",
+  "about_text": "Der Manhwa Webtoon Analyzer nutzt KI, um deine Lieblingskapitel aufzuschlüsseln: erkennt Panels, gruppiert sie zu Szenen, erstellt eine Story-Zusammenfassung, erkennt die Stimmung und extrahiert die Farbpalette — alles in Sekunden.",
+  "about_free": "Kostenlos · Ohne Anmeldung · Sofortige Ergebnisse",
+  "about_close": "Verstanden!"
 }

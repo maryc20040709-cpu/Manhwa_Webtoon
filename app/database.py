@@ -32,7 +32,7 @@ def save_analysis(title: str, characters: str, panels_found: int, total_scenes: 
 
 
 def get_history(limit: int = 10):
-    init_db()  # ensure table exists
+    init_db()
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     rows = conn.execute(
@@ -40,3 +40,11 @@ def get_history(limit: int = 10):
     ).fetchall()
     conn.close()
     return [dict(row) for row in rows]
+
+
+def get_total_count() -> int:
+    init_db()
+    conn = sqlite3.connect(DB_PATH)
+    count = conn.execute("SELECT COUNT(*) FROM analyses").fetchone()[0]
+    conn.close()
+    return count
