@@ -33,5 +33,12 @@
   "about_close": "Понятно!",
   "total_analyses_one": "анализ выполнен",
   "total_analyses_other_234": "анализа выполнено",
-  "total_analyses_many": "анализов выполнено"
+  "total_analyses_many": "анализов выполнено",
+  "label_genre": "Жанр",
+  "btn_compare": "Сравнить с другой главой",
+  "section_compare": "Глава 2 — загрузи для сравнения",
+  "compare_drop": "Перетащи изображение главы 2",
+  "btn_compare_analyze": "✨ Анализировать главу 2",
+  "section_compare_result": "Сравнение глав",
+  "compare_more_panels": "больше панелей"
 }

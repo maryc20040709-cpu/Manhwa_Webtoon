@@ -4,6 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Manhwa Webtoon Analyzer</title>
+<meta name="description" content="Upload a manhwa or webtoon panel — AI detects mood, counts panels, groups scenes, generates story recap and extracts colour palette. Free, no sign-up.">
+<meta property="og:title" content="Manhwa Webtoon Analyzer">
+<meta property="og:description" content="AI-powered manhwa analysis: mood detection, panel counting, story recap, colour palette — free and instant.">
+<meta property="og:url" content="https://manhwa-webtoon.onrender.com/static/index.html">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://manhwa-webtoon.onrender.com/static/logo.svg">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Manhwa Webtoon Analyzer">
+<meta name="twitter:description" content="Upload a manhwa panel — get instant AI analysis: mood, panels, scenes, story recap.">
 <link rel="icon" type="image/svg+xml" href="/static/logo.svg">
 <style>
 /* ── Variables ───────────────────────────────────────────── */
@@ -198,6 +207,46 @@ body.dark .error-box{background:#2a1010;border-color:#6b2020;color:#f08080}
 @keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 @keyframes toastOut{to{opacity:0;transform:translateX(-50%) translateY(6px)}}
 
+/* ── Genre chips ─────────────────────────────────────────── */
+.genre-row{margin-bottom:1rem}
+.genre-label{font-size:13px;color:var(--sub);display:block;margin-bottom:7px}
+.genre-chips{display:flex;gap:6px;flex-wrap:wrap}
+.genre-chip{padding:5px 12px;border:1.5px solid var(--inp-b);border-radius:20px;
+  background:transparent;font-size:12px;color:var(--sub);cursor:pointer;
+  transition:all .15s;font-family:inherit}
+.genre-chip:hover{border-color:var(--accent);color:var(--accent)}
+.genre-chip.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* genre result tag */
+.genre-tag-row{margin-bottom:.75rem;display:none}
+.genre-tag{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;
+  border-radius:20px;font-size:12px;font-weight:600;
+  background:var(--accent-l);color:var(--accent)}
+
+/* ── Counter pill animation ───────────────────────────────── */
+@keyframes pillPop{from{opacity:0;transform:scale(.75)}to{opacity:1;transform:scale(1)}}
+.counter-pill.pop{animation:pillPop .45s cubic-bezier(.175,.885,.32,1.275) forwards}
+
+/* ── Compare section ─────────────────────────────────────── */
+.compare-upload{border:2px dashed var(--drop-b);border-radius:12px;padding:1.5rem 1rem;
+  text-align:center;background:var(--drop-bg);margin-bottom:1rem;cursor:pointer;
+  transition:border-color .2s,background .2s}
+.compare-upload:hover,.compare-upload.dragover{border-color:var(--accent);background:var(--drop-hv)}
+.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:1rem}
+.compare-col{background:var(--stat);border:1px solid var(--border);border-radius:12px;padding:1rem}
+.compare-ch-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:.75rem;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.compare-row{display:flex;justify-content:space-between;align-items:center;
+  font-size:12px;color:var(--sub);margin-bottom:6px}
+.compare-val{font-size:18px;font-weight:700;color:var(--accent);line-height:1}
+.compare-mood{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;
+  border-radius:20px;font-size:11px;font-weight:600}
+.compare-recap{font-size:11px;color:var(--sub);line-height:1.5;margin-top:.6rem;
+  border-top:1px solid var(--border);padding-top:.6rem}
+.compare-winner{border:2px solid var(--accent)!important}
+.winner-badge{display:inline-block;background:var(--accent);color:#fff;
+  font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;margin-left:6px}
+
 /* ── Mobile ──────────────────────────────────────────────── */
 @media(max-width:480px){
   .app{padding:1rem .75rem 3rem}
@@ -279,6 +328,16 @@ body.dark .error-box{background:#2a1010;border-color:#6b2020;color:#f08080}
         <input type="text" id="charsInput" data-i18n-placeholder="placeholder_characters" placeholder="e.g. Sung Jinwoo">
       </div>
     </div>
+    <div class="genre-row">
+      <label class="genre-label" data-i18n="label_genre">Genre</label>
+      <div class="genre-chips" id="genreChips">
+        <button class="genre-chip" onclick="selectGenre('shonen')">⚡ Shōnen</button>
+        <button class="genre-chip" onclick="selectGenre('shojo')">💕 Shōjo</button>
+        <button class="genre-chip" onclick="selectGenre('manhwa')">🇰🇷 Manhwa</button>
+        <button class="genre-chip" onclick="selectGenre('manhua')">🇨🇳 Manhua</button>
+        <button class="genre-chip" onclick="selectGenre('isekai')">🌀 Isekai</button>
+      </div>
+    </div>
     <button class="btn-analyze" id="analyzeBtn" onclick="analyze()">
       <span data-i18n="btn_analyze">✨ Analyze</span>
     </button>
@@ -291,6 +350,9 @@ body.dark .error-box{background:#2a1010;border-color:#6b2020;color:#f08080}
     <div class="mood-row">
       <span class="mood-lbl" data-i18n="label_mood">Mood</span>
       <span class="mood-badge mood-neutral" id="moodBadge">—</span>
+    </div>
+    <div class="genre-tag-row" id="genreTagRow">
+      <span class="genre-tag" id="genreTag"></span>
     </div>
     <div class="stats-grid">
       <div class="stat">
@@ -318,6 +380,41 @@ body.dark .error-box{background:#2a1010;border-color:#6b2020;color:#f08080}
       <button class="sec-btn" onclick="shareResult()">🔗 <span data-i18n="btn_share">Share</span></button>
       <button class="sec-btn" onclick="exportCard()">🖼 <span data-i18n="btn_export">Save as image</span></button>
     </div>
+    <div style="margin-top:.75rem;text-align:center">
+      <button class="sec-btn" style="width:100%;margin-top:0" onclick="startCompare()" id="compareBtn">
+        ⚖️ <span data-i18n="btn_compare">Compare with another chapter</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Compare upload card -->
+  <div class="card" id="compareCard" style="display:none">
+    <div class="section-label" data-i18n="section_compare">Chapter 2 — upload to compare</div>
+    <div class="compare-upload" id="compareDropZone">
+      <div class="drop-icon">☁️</div>
+      <div class="drop-text" data-i18n="compare_drop">Drop chapter 2 image here</div>
+      <div class="drop-filename" id="compareFilename"></div>
+    </div>
+    <input type="file" id="compareFileInput" accept="image/jpeg,image/png" style="display:none">
+    <div class="field-row" style="margin-bottom:.75rem">
+      <div class="field">
+        <label data-i18n="label_title">Manhwa title</label>
+        <input type="text" id="compareTitleInput" data-i18n-placeholder="placeholder_title" placeholder="e.g. Solo Leveling">
+      </div>
+      <div class="field">
+        <label data-i18n="label_characters">Characters</label>
+        <input type="text" id="compareCharsInput" data-i18n-placeholder="placeholder_characters" placeholder="e.g. Sung Jinwoo">
+      </div>
+    </div>
+    <button class="btn-analyze" id="compareAnalyzeBtn" onclick="analyzeCompare()">
+      <span data-i18n="btn_compare_analyze">✨ Analyze Chapter 2</span>
+    </button>
+  </div>
+
+  <!-- Comparison result -->
+  <div class="card" id="compareResult" style="display:none">
+    <div class="section-label" data-i18n="section_compare_result">Chapter comparison</div>
+    <div class="compare-grid" id="compareGrid"></div>
   </div>
 
   <!-- History -->
@@ -410,6 +507,30 @@ function openAbout(){document.getElementById('aboutOverlay').classList.add('open
 function closeAbout(){document.getElementById('aboutOverlay').classList.remove('open')}
 function closeAboutOutside(e){if(e.target===e.currentTarget)closeAbout()}
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeAbout()});
+
+// ══ Genre ════════════════════════════════════════════════
+let selectedGenre = null;
+function selectGenre(g){
+  selectedGenre = (selectedGenre === g) ? null : g; // toggle off if same
+  document.querySelectorAll('#genreChips .genre-chip').forEach((btn,i)=>{
+    const genres=['shonen','shojo','manhwa','manhua','isekai'];
+    btn.classList.toggle('active', genres[i]===selectedGenre);
+  });
+}
+const GENRE_LABELS={
+  shonen:'⚡ Shōnen', shojo:'💕 Shōjo',
+  manhwa:'🇰🇷 Manhwa', manhua:'🇨🇳 Manhua', isekai:'🌀 Isekai'
+};
+function showGenreTag(){
+  const row=document.getElementById('genreTagRow');
+  const tag=document.getElementById('genreTag');
+  if(selectedGenre){
+    tag.textContent=GENRE_LABELS[selectedGenre];
+    row.style.display='block';
+  }else{
+    row.style.display='none';
+  }
+}
 
 // ══ Drag & Drop ══════════════════════════════════════════
 const dropZone=document.getElementById('dropZone');
@@ -639,6 +760,83 @@ function wrapText(ctx,text,x,y,maxW,lineH,maxLines){
   if(line)ctx.fillText(line,x,y);
 }
 
+// ══ Compare mode ═════════════════════════════════════════
+let compareFile = null;
+
+function startCompare(){
+  const card=document.getElementById('compareCard');
+  const isVisible=card.style.display!=='none';
+  card.style.display=isVisible?'none':'block';
+  if(!isVisible) card.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// Compare drop zone
+(function(){
+  const dz=document.getElementById('compareDropZone');
+  const fi=document.getElementById('compareFileInput');
+  if(!dz||!fi)return;
+  dz.addEventListener('click',()=>fi.click());
+  dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('dragover')});
+  dz.addEventListener('dragleave',()=>dz.classList.remove('dragover'));
+  dz.addEventListener('drop',e=>{
+    e.preventDefault();dz.classList.remove('dragover');
+    if(e.dataTransfer.files[0])setCompareFile(e.dataTransfer.files[0]);
+  });
+  fi.addEventListener('change',()=>{if(fi.files[0])setCompareFile(fi.files[0])});
+})();
+
+function setCompareFile(f){
+  compareFile=f;
+  document.getElementById('compareFilename').textContent='✅ '+f.name;
+}
+
+async function analyzeCompare(){
+  if(!compareFile){showError(t('err_no_file'));return;}
+  if(!lastResult){showError('Analyze chapter 1 first.');return;}
+  const title=document.getElementById('compareTitleInput').value.trim()||'Chapter 2';
+  const chars=document.getElementById('compareCharsInput').value.trim()||'Unknown';
+  const btn=document.getElementById('compareAnalyzeBtn');
+  btn.disabled=true;
+  btn.innerHTML=`<div class="spinner"></div><span>${t('btn_analyzing')}</span>`;
+  const form=new FormData();
+  form.append('file',compareFile);
+  try{
+    const res=await fetch('/analyze?title='+encodeURIComponent(title)+'&characters='+encodeURIComponent(chars)+'&lang='+encodeURIComponent(currentLang),{method:'POST',body:form});
+    const data=await res.json();
+    if(!res.ok){showError(data.detail||t('err_generic'));return;}
+    const ch2={title,panels:data.panels_found,scenes:data.total_scenes,recap:data.recap};
+    const ch1title=document.getElementById('titleInput').value.trim()||'Chapter 1';
+    const ch1={title:ch1title,panels:lastResult.panels,scenes:lastResult.scenes,recap:lastResult.recap};
+    showComparison(ch1,ch2);
+    document.getElementById('compareCard').style.display='none';
+  }catch(e){showError(t('err_connection'));}
+  finally{btn.disabled=false;btn.innerHTML=`<span>${t('btn_compare_analyze')}</span>`;}
+}
+
+function showComparison(ch1,ch2){
+  const m1=detectMood(ch1.recap),m2=detectMood(ch2.recap);
+  const winnerByPanels= ch1.panels>=ch2.panels ? 0 : 1;
+  const res=document.getElementById('compareResult');
+  const grid=document.getElementById('compareGrid');
+  const cols=[ch1,ch2].map((ch,i)=>{
+    const m=i===0?m1:m2;
+    const mBadge=m?`<span class="compare-mood mood-${m.id}">${m.emoji} ${m.id[0].toUpperCase()+m.id.slice(1)}</span>`:'<span class="compare-mood mood-neutral">—</span>';
+    const winner=i===winnerByPanels?`<span class="winner-badge">${t('compare_more_panels')}</span>`:'';
+    return`<div class="compare-col${i===winnerByPanels?' compare-winner':''}">
+      <div class="compare-ch-title">${ch.title}${winner}</div>
+      ${mBadge}
+      <div style="margin-top:.6rem">
+        <div class="compare-row"><span>${t('label_panels')}</span><span class="compare-val">${ch.panels}</span></div>
+        <div class="compare-row"><span>${t('label_scenes')}</span><span class="compare-val">${ch.scenes}</span></div>
+      </div>
+      <div class="compare-recap">${truncate(ch.recap,120)}</div>
+    </div>`;
+  });
+  grid.innerHTML=cols.join('');
+  res.style.display='block';
+  res.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
 // ══ Analyze ══════════════════════════════════════════════
 // last result state — updated after each successful analysis
 let lastResult = null;
@@ -677,6 +875,7 @@ async function analyze(){
     rtEl.innerHTML=`${mins}<span class="stat-unit">${t('unit_min')}</span>`;
     document.getElementById('recapText').textContent=data.recap;
     showMood(data.recap);
+    showGenreTag();
 
     // store for language-switch re-render
     lastResult = {panels, scenes: data.total_scenes, recap: data.recap, mins, lang: currentLang};
@@ -772,7 +971,13 @@ async function loadStats(){
       const num=document.getElementById('counterNum');
       const lbl=document.getElementById('counterLabel');
       pill.dataset.count=n;   // store for language switch
+      const wasHidden=pill.style.display==='none'||!pill.style.display;
       pill.style.display='inline-flex';
+      if(wasHidden){
+        pill.classList.remove('pop');
+        void pill.offsetWidth; // reflow to restart animation
+        pill.classList.add('pop');
+      }
       countUp(num,n,800);
       if(lbl)lbl.textContent=pluralAnalyses(n);
     }

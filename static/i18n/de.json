@@ -32,5 +32,12 @@
   "about_free": "Kostenlos · Ohne Anmeldung · Sofortige Ergebnisse",
   "about_close": "Verstanden!",
   "total_analyses_one": "Analyse durchgeführt",
-  "total_analyses_other": "Analysen durchgeführt"
+  "total_analyses_other": "Analysen durchgeführt",
+  "label_genre": "Genre",
+  "btn_compare": "Mit Kapitel 2 vergleichen",
+  "section_compare": "Kapitel 2 — zum Vergleich hochladen",
+  "compare_drop": "Kapitel-2-Bild hier ablegen",
+  "btn_compare_analyze": "✨ Kapitel 2 analysieren",
+  "section_compare_result": "Kapitelvergleich",
+  "compare_more_panels": "mehr Panels"
 }

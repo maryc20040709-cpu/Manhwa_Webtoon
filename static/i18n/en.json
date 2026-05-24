@@ -32,5 +32,12 @@
   "about_free": "Free · No sign-up · Instant results",
   "about_close": "Got it!",
   "total_analyses_one": "analysis done",
-  "total_analyses_other": "analyses done"
+  "total_analyses_other": "analyses done",
+  "label_genre": "Genre",
+  "btn_compare": "Compare with another chapter",
+  "section_compare": "Chapter 2 — upload to compare",
+  "compare_drop": "Drop chapter 2 image here",
+  "btn_compare_analyze": "✨ Analyze Chapter 2",
+  "section_compare_result": "Chapter comparison",
+  "compare_more_panels": "more panels"
 }
