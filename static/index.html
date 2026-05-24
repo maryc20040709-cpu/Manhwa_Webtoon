@@ -473,43 +473,28 @@ function renderPalette(colors){
 // ══ Mood Detection ════════════════════════════════════════
 const MOODS=[
   {id:'action', emoji:'⚡',keys:[
-    // EN
     'fight','battle','attack','power','level','hunter','monster','dungeon','clash','weapon','enemy','combat','warrior','struggle',
-    // DE
     'kampf','kämpf','angriff','macht','jäger','waffe','feind','krieger','streiten','schlacht',
-    // RU
     'бой','битва','атака','сила','охотник','монстр','подземелье','оружие','враг','воин','борьба'
   ]},
   {id:'romance',emoji:'💕',keys:[
-    // EN
     'love','heart','kiss','crush','feelings','together','relationship','confess','romantic','jealous',
-    // DE
     'liebe','herz','kuss','verliebt','gefühle','zusammen','beziehung','geständnis','romantisch','eifersüchtig',
-    // RU
     'любовь','сердце','поцелуй','влюбл','чувства','вместе','отношения','признание','романтичн','ревнив'
   ]},
   {id:'drama',  emoji:'🎭',keys:[
-    // EN
-    'tension','decision','crucial','conflict','betrayal','secret','confront','choice','fate','cry','tears','sacrifice',
-    // DE
-    'spannung','entscheidung','entscheidend','konflikt','verrat','geheimnis','schicksal','weinen','tränen','opfer','ernst','gefangen','rivalität','freundschaft','rivalit',
-    // RU
-    'напряжение','решение','конфликт','предательство','тайна','судьба','плакать','слёзы','жертва','серьёзно','соперничество','дружба','между'
+    'tension','decision','crucial','conflict','betrayal','secret','confront','choice','fate','cry','tears','sacrifice','dilemma','stakes',
+    'spannung','entscheid','entscheidend','konflikt','verrat','geheimnis','schicksal','weinen','tränen','opfer','ernst','gefangen','rivalit','freundschaft','dilemma','schwierig','veränder','kochen','ständnis',
+    'напряжение','решение','конфликт','предательство','тайна','судьба','плакать','слёзы','жертва','соперничест','дружб','между','дилемм','противоречи','нарастает','судьбонос'
   ]},
   {id:'mystery',emoji:'🔍',keys:[
-    // EN
     'mystery','unknown','hidden','discover','clue','investigate','shadow','strange','curse','prophecy',
-    // DE
     'mysterium','unbekannt','versteckt','entdecken','hinweis','ermitteln','schatten','seltsam','fluch','prophezeiung',
-    // RU
     'тайна','неизвестн','скрытый','открыть','улика','расследовать','тень','странный','проклятие','пророчество'
   ]},
   {id:'comedy', emoji:'😄',keys:[
-    // EN
     'laugh','funny','joke','silly','embarrass','awkward','hilarious','chaos','accident','misunderstand',
-    // DE
     'lachen','lustig','witz','blöd','peinlich','chaos','unfall','missverständnis',
-    // RU
     'смеяться','смешной','шутка','глупый','неловко','хаос','случайность','недоразумение'
   ]},
 ];
@@ -694,7 +679,7 @@ async function analyze(){
     showMood(data.recap);
 
     // store for language-switch re-render
-    lastResult = {panels, scenes: data.total_scenes, recap: data.recap, mins};
+    lastResult = {panels, scenes: data.total_scenes, recap: data.recap, mins, lang: currentLang};
 
     loadHistory();
     loadStats();
@@ -709,15 +694,31 @@ function showError(msg){
 
 // ══ Re-render result on language switch ══════════════════
 function reRenderResult(){
-  // update read time unit (stored in data-attribute, survives language switch)
+  // update read time unit
   const rtEl=document.getElementById('readtimeVal');
   const mins=rtEl.dataset.mins;
   if(mins) rtEl.innerHTML=`${mins}<span class="stat-unit">${t('unit_min')}</span>`;
-  // re-detect mood using current recap text
+  // re-detect mood
   const recap=document.getElementById('recapText').textContent;
   if(recap&&recap!=='—') showMood(recap);
   // re-render counter label
   reRenderCounter();
+  // show hint if recap is in a different language
+  const hintId='recap-lang-hint';
+  let hint=document.getElementById(hintId);
+  if(lastResult && lastResult.lang && lastResult.lang!==currentLang){
+    if(!hint){
+      hint=document.createElement('div');
+      hint.id=hintId;
+      hint.style.cssText='margin-top:8px;font-size:12px;color:var(--accent);cursor:pointer;text-align:center;';
+      hint.onclick=()=>{ if(selectedFile) analyze(); };
+      document.querySelector('.recap-box').appendChild(hint);
+    }
+    const arrows={'en':'EN','de':'DE','ru':'РУ'};
+    hint.textContent='🔄 Click "Analyze" again for recap in '+( arrows[currentLang]||currentLang );
+  } else if(hint){
+    hint.remove();
+  }
 }
 
 // ══ History ═══════════════════════════════════════════════
