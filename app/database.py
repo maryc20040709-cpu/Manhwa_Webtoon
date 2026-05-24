@@ -1,5 +1,6 @@
 import sqlite3
 import os
+import uuid
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "..", "history.db")
 
@@ -17,18 +18,52 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
+    # Migrate: add new columns if they don't exist yet
+    for col, definition in [
+        ("result_id", "TEXT"),
+        ("genre",     "TEXT"),
+    ]:
+        try:
+            conn.execute(f"ALTER TABLE analyses ADD COLUMN {col} {definition}")
+        except Exception:
+            pass  # column already exists — safe to ignore
     conn.commit()
     conn.close()
 
 
-def save_analysis(title: str, characters: str, panels_found: int, total_scenes: int, recap: str):
+def save_analysis(
+    title: str,
+    characters: str,
+    panels_found: int,
+    total_scenes: int,
+    recap: str,
+    genre: str = None,
+) -> str:
+    """Save an analysis and return its short result_id."""
+    init_db()
+    result_id = uuid.uuid4().hex[:8]  # e.g. "a3f8c12e"
     conn = sqlite3.connect(DB_PATH)
     conn.execute(
-        "INSERT INTO analyses (title, characters, panels_found, total_scenes, recap) VALUES (?, ?, ?, ?, ?)",
-        (title, characters, panels_found, total_scenes, recap)
+        """INSERT INTO analyses
+           (title, characters, panels_found, total_scenes, recap, result_id, genre)
+           VALUES (?, ?, ?, ?, ?, ?, ?)""",
+        (title, characters, panels_found, total_scenes, recap, result_id, genre),
     )
     conn.commit()
     conn.close()
+    return result_id
+
+
+def get_analysis_by_id(result_id: str):
+    """Retrieve a single analysis by its short result_id."""
+    init_db()
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    row = conn.execute(
+        "SELECT * FROM analyses WHERE result_id = ?", (result_id,)
+    ).fetchone()
+    conn.close()
+    return dict(row) if row else None
 
 
 def get_history(limit: int = 10):

@@ -223,6 +223,43 @@ body.dark .error-box{background:#2a1010;border-color:#6b2020;color:#f08080}
   border-radius:20px;font-size:12px;font-weight:600;
   background:var(--accent-l);color:var(--accent)}
 
+/* ── Personal counter ────────────────────────────────────── */
+.personal-pill{
+  display:inline-flex;align-items:center;gap:5px;margin-top:6px;
+  background:transparent;color:var(--muted);
+  font-size:11px;font-weight:500;padding:3px 10px;border-radius:20px;
+  border:1px solid var(--border);
+}
+.personal-pill.has-count{color:var(--accent);border-color:var(--accent-l);background:var(--accent-l)}
+
+/* ── Fav button ──────────────────────────────────────────── */
+.fav-btn{
+  width:100%;margin-top:.5rem;padding:10px;background:transparent;
+  border:1.5px solid var(--border);border-radius:10px;
+  color:var(--muted);font-size:13px;font-weight:500;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  transition:all .2s;font-family:inherit;
+}
+.fav-btn:hover{border-color:#e84040;color:#e84040;background:#fff0f0}
+.fav-btn.saved{border-color:#e84040;color:#e84040;background:#fff0f0}
+body.dark .fav-btn:hover,body.dark .fav-btn.saved{background:#2a0808}
+
+/* ── Favorites section ───────────────────────────────────── */
+.genre-chart{margin-bottom:1rem}
+.genre-bar-row{margin-bottom:7px}
+.genre-bar-label{display:flex;justify-content:space-between;font-size:12px;
+  color:var(--sub);margin-bottom:3px}
+.genre-bar-track{height:7px;border-radius:4px;background:var(--border)}
+.genre-bar-fill{height:100%;border-radius:4px;transition:width .5s ease}
+.fav-item{display:flex;align-items:center;gap:12px;padding:10px 0;
+  border-bottom:1px solid var(--hist-b)}
+.fav-item:last-child{border-bottom:none}
+.fav-icon{width:36px;height:36px;background:var(--accent-l);border-radius:9px;
+  display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.fav-remove{background:none;border:none;color:var(--muted);cursor:pointer;
+  font-size:16px;padding:4px;border-radius:6px;transition:color .15s}
+.fav-remove:hover{color:#e84040}
+
 /* ── Counter pill animation ───────────────────────────────── */
 @keyframes pillPop{from{opacity:0;transform:scale(.75)}to{opacity:1;transform:scale(1)}}
 .counter-pill.pop{animation:pillPop .45s cubic-bezier(.175,.885,.32,1.275) forwards}
@@ -301,6 +338,9 @@ body.dark .error-box{background:#2a1010;border-color:#6b2020;color:#f08080}
     <div class="counter-pill" id="counterPill" style="display:none">
       <span class="counter-num" id="counterNum">0</span>
       <span id="counterLabel">analyses done</span>
+    </div>
+    <div class="personal-pill" id="personalPill" style="display:none">
+      🎯 <span id="personalLabel"></span>
     </div>
     <div class="lang-switcher">
       <button class="lang-btn" onclick="setLanguage('en')">EN</button>
@@ -385,6 +425,9 @@ body.dark .error-box{background:#2a1010;border-color:#6b2020;color:#f08080}
         ⚖️ <span data-i18n="btn_compare">Compare with another chapter</span>
       </button>
     </div>
+    <button class="fav-btn" id="favBtn" onclick="toggleFavorite()">
+      🤍 <span data-i18n="btn_fav_save">Save to favourites</span>
+    </button>
   </div>
 
   <!-- Compare upload card -->
@@ -415,6 +458,13 @@ body.dark .error-box{background:#2a1010;border-color:#6b2020;color:#f08080}
   <div class="card" id="compareResult" style="display:none">
     <div class="section-label" data-i18n="section_compare_result">Chapter comparison</div>
     <div class="compare-grid" id="compareGrid"></div>
+  </div>
+
+  <!-- Favourites -->
+  <div class="card" id="favsSection" style="display:none">
+    <div class="section-title">❤️ <span data-i18n="section_favs">Favourites</span></div>
+    <div class="genre-chart" id="genreChart"></div>
+    <div id="favsList"></div>
   </div>
 
   <!-- History -->
@@ -507,6 +557,119 @@ function openAbout(){document.getElementById('aboutOverlay').classList.add('open
 function closeAbout(){document.getElementById('aboutOverlay').classList.remove('open')}
 function closeAboutOutside(e){if(e.target===e.currentTarget)closeAbout()}
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeAbout()});
+
+// ══ Personal counter ═════════════════════════════════════
+const PC_KEY='mwa_personal_count';
+function incrementPersonalCounter(){
+  const n=(parseInt(localStorage.getItem(PC_KEY)||'0'))+1;
+  localStorage.setItem(PC_KEY,n);
+  renderPersonalCounter(n);
+}
+function renderPersonalCounter(n){
+  if(!n)return;
+  const pill=document.getElementById('personalPill');
+  const lbl=document.getElementById('personalLabel');
+  if(!pill||!lbl)return;
+  pill.style.display='inline-flex';
+  pill.classList.add('has-count');
+  lbl.textContent=t('personal_counter',{n});
+}
+
+// ══ Favourites ════════════════════════════════════════════
+const FAV_KEY='mwa_favorites';
+function getFavs(){try{return JSON.parse(localStorage.getItem(FAV_KEY)||'[]')}catch{return[]}}
+function saveFavs(f){localStorage.setItem(FAV_KEY,JSON.stringify(f))}
+
+function toggleFavorite(){
+  if(!lastResult)return;
+  const title=document.getElementById('titleInput').value.trim()||'Unknown';
+  const fid=title+'_'+lastResult.panels;
+  let favs=getFavs();
+  const idx=favs.findIndex(f=>f.id===fid);
+  const btn=document.getElementById('favBtn');
+  const lbl=btn?btn.querySelector('[data-i18n]'):null;
+  if(idx>=0){
+    favs.splice(idx,1);
+    btn&&btn.classList.remove('saved');
+    btn&&(btn.childNodes[0].textContent='🤍 ');
+    lbl&&(lbl.textContent=t('btn_fav_save'));
+    toast('💔 '+t('fav_removed'));
+  }else{
+    favs.push({
+      id:fid,title,genre:selectedGenre,
+      mood:document.getElementById('moodBadge').textContent,
+      panels:lastResult.panels,scenes:lastResult.scenes,
+      recap:lastResult.recap,resultId:lastResult.resultId||null,
+      date:new Date().toISOString()
+    });
+    btn&&btn.classList.add('saved');
+    btn&&(btn.childNodes[0].textContent='❤️ ');
+    lbl&&(lbl.textContent=t('btn_fav_saved'));
+    toast('❤️ '+t('fav_saved'));
+  }
+  saveFavs(favs);
+  renderFavorites();
+}
+
+function checkFavBtn(){
+  if(!lastResult)return;
+  const title=document.getElementById('titleInput').value.trim()||'Unknown';
+  const fid=title+'_'+lastResult.panels;
+  const saved=getFavs().some(f=>f.id===fid);
+  const btn=document.getElementById('favBtn');
+  const lbl=btn?btn.querySelector('[data-i18n]'):null;
+  if(btn) btn.classList.toggle('saved',saved);
+  if(btn) btn.childNodes[0].textContent=saved?'❤️ ':'🤍 ';
+  if(lbl) lbl.textContent=saved?t('btn_fav_saved'):t('btn_fav_save');
+}
+
+function renderFavorites(){
+  const favs=getFavs();
+  const section=document.getElementById('favsSection');
+  const list=document.getElementById('favsList');
+  if(!section||!list)return;
+  if(!favs.length){section.style.display='none';return;}
+  section.style.display='block';
+  const sorted=[...favs].reverse();
+  list.innerHTML=sorted.map(f=>{
+    const icon=f.genre&&GENRE_LABELS[f.genre]?GENRE_LABELS[f.genre].split(' ')[0]:'📖';
+    const genTag=f.genre?`<span style="font-size:10px;padding:2px 7px;background:var(--accent-l);color:var(--accent);border-radius:10px;font-weight:600;margin-left:4px">${GENRE_LABELS[f.genre]||f.genre}</span>`:'';
+    return`<div class="fav-item">
+      <div class="fav-icon">${icon}</div>
+      <div class="hist-info" style="flex:1;min-width:0">
+        <div class="hist-title">${f.title}${genTag}</div>
+        <div class="hist-meta">${f.panels} ${t('label_panels').toLowerCase()} · ${f.mood}</div>
+      </div>
+      <button class="fav-remove" onclick="removeFav('${f.id}')" title="Remove">💔</button>
+    </div>`;
+  }).join('');
+  renderGenreChart(favs);
+}
+
+function removeFav(fid){
+  let favs=getFavs();
+  favs=favs.filter(f=>f.id!==fid);
+  saveFavs(favs);
+  renderFavorites();
+  checkFavBtn();
+}
+
+// ── Genre bar chart ───────────────────────────────────────
+const GENRE_COLORS={shonen:'#ff8c00',shojo:'#ff4499',manhwa:'#534AB7',manhua:'#e84040',isekai:'#22a86e'};
+function renderGenreChart(favs){
+  if(!favs) favs=getFavs();
+  const chart=document.getElementById('genreChart');
+  if(!chart)return;
+  const counts={};
+  favs.forEach(f=>{if(f.genre)counts[f.genre]=(counts[f.genre]||0)+1;});
+  const total=Object.values(counts).reduce((a,b)=>a+b,0);
+  if(!total){chart.innerHTML='';return;}
+  chart.innerHTML=Object.entries(counts).sort((a,b)=>b[1]-a[1]).map(([g,n])=>`
+    <div class="genre-bar-row">
+      <div class="genre-bar-label"><span>${GENRE_LABELS[g]||g}</span><span>${n}</span></div>
+      <div class="genre-bar-track"><div class="genre-bar-fill" style="width:${Math.round(n/total*100)}%;background:${GENRE_COLORS[g]||'var(--accent)'}"></div></div>
+    </div>`).join('');
+}
 
 // ══ Genre ════════════════════════════════════════════════
 let selectedGenre = null;
@@ -654,10 +817,45 @@ function shareResult(){
   const scenes=document.getElementById('scenesVal').textContent;
   const recap=document.getElementById('recapText').textContent;
   const mood=document.getElementById('moodBadge').textContent;
-  const text=`📖 ${title} — Manhwa Analysis\n🎭 ${t('label_mood')}: ${mood}\n📦 ${t('label_panels')}: ${panels}   🎬 ${t('label_scenes')}: ${scenes}\n\n💬 "${recap}"\n\n🔗 manhwa-webtoon.onrender.com`;
+  const genreLine=selectedGenre?`\n🏷 ${t('label_genre')}: ${GENRE_LABELS[selectedGenre]||selectedGenre}`:'';
+  const resultLink=lastResult&&lastResult.resultId
+    ?`\n🔗 manhwa-webtoon.onrender.com/static/index.html?result=${lastResult.resultId}`
+    :'\n🔗 manhwa-webtoon.onrender.com';
+  const text=`📖 ${title} — Manhwa Analysis\n🎭 ${t('label_mood')}: ${mood}${genreLine}\n📦 ${t('label_panels')}: ${panels}   🎬 ${t('label_scenes')}: ${scenes}\n\n💬 "${recap}"${resultLink}`;
   navigator.clipboard.writeText(text)
     .then(()=>toast('✅ Copied!'))
     .catch(()=>{const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();toast('✅ Copied!');});
+}
+
+// ══ Load shared result from URL ════════════════════════════
+async function loadSharedResult(){
+  const params=new URLSearchParams(window.location.search);
+  const rid=params.get('result');
+  if(!rid)return;
+  try{
+    const res=await fetch('/result/'+encodeURIComponent(rid));
+    if(!res.ok)return;
+    const data=await res.json();
+    // Populate fields
+    document.getElementById('titleInput').value=data.title||'';
+    document.getElementById('charsInput').value=data.characters||'';
+    if(data.genre) selectGenre(data.genre);
+    // Show results
+    const panels=data.panels_found||0;
+    const mins=Math.max(1,Math.round(panels/3));
+    document.getElementById('panelsVal').textContent=panels;
+    document.getElementById('scenesVal').textContent=data.total_scenes||0;
+    const rtEl=document.getElementById('readtimeVal');
+    rtEl.dataset.mins=mins;
+    rtEl.innerHTML=`${mins}<span class="stat-unit">${t('unit_min')}</span>`;
+    document.getElementById('recapText').textContent=data.recap||'';
+    document.getElementById('resultsSection').classList.add('visible');
+    showMood(data.recap||'');
+    showGenreTag();
+    lastResult={panels,scenes:data.total_scenes||0,recap:data.recap||'',mins,lang:currentLang,resultId:rid};
+    checkFavBtn();
+    toast('📖 '+t('shared_loaded'));
+  }catch(e){console.warn('shared result load failed',e);}
 }
 
 // ══ PNG Export (Canvas) ═══════════════════════════════════
@@ -707,9 +905,16 @@ function exportCard(){
   ctx.fillStyle='#ffffff';ctx.font='bold 30px -apple-system,sans-serif';
   ctx.fillText(truncate(title,36),40,150);
 
-  // mood
+  // mood + genre
   ctx.fillStyle='#8078E0';ctx.font='bold 16px -apple-system,sans-serif';
-  ctx.fillText(mood,40,185);
+  let moodX=40;
+  ctx.fillText(mood,moodX,185);
+  if(selectedGenre&&GENRE_LABELS[selectedGenre]){
+    const mw=ctx.measureText(mood).width;
+    ctx.fillStyle='rgba(83,74,183,.35)';roundRect(ctx,moodX+mw+12,170,ctx.measureText(GENRE_LABELS[selectedGenre]).width+18,22,11);ctx.fill();
+    ctx.fillStyle='#b0aae8';ctx.font='13px -apple-system,sans-serif';
+    ctx.fillText(GENRE_LABELS[selectedGenre],moodX+mw+21,185);
+  }
 
   // stats boxes
   const stats=[
@@ -855,17 +1060,27 @@ async function analyze(){
   const form=new FormData();
   form.append('file',selectedFile);
   try{
-    const res=await fetch('/analyze?title='+encodeURIComponent(title)+'&characters='+encodeURIComponent(chars)+'&lang='+encodeURIComponent(currentLang),{method:'POST',body:form});
+    const url='/analyze?title='+encodeURIComponent(title)
+      +'&characters='+encodeURIComponent(chars)
+      +'&lang='+encodeURIComponent(currentLang)
+      +(selectedGenre?'&genre='+encodeURIComponent(selectedGenre):'');
+    const res=await fetch(url,{method:'POST',body:form});
     const data=await res.json();
     if(!res.ok){showError(data.detail||t('err_generic'));return;}
 
     const panels=data.panels_found;
+
+    // 0 panels → friendly error with retry hint
+    if(panels===0){
+      showError(t('err_no_panels'));
+      return;
+    }
+
     const pEl=document.getElementById('panelsVal');
     const sEl=document.getElementById('scenesVal');
     pEl.textContent='0';sEl.textContent='0';
     document.getElementById('resultsSection').classList.add('visible');
 
-    // count-up animation
     countUp(pEl,panels);
     countUp(sEl,data.total_scenes);
 
@@ -878,10 +1093,15 @@ async function analyze(){
     showGenreTag();
 
     // store for language-switch re-render
-    lastResult = {panels, scenes: data.total_scenes, recap: data.recap, mins, lang: currentLang};
+    lastResult = {panels, scenes: data.total_scenes, recap: data.recap, mins, lang: currentLang, resultId: data.result_id||null};
+
+    // personal counter + fav button state
+    incrementPersonalCounter();
+    checkFavBtn();
 
     loadHistory();
     loadStats();
+    renderFavorites();
   }catch(e){showError(t('err_connection'));}
   finally{btn.disabled=false;btn.innerHTML=`<span data-i18n="btn_analyze">${t('btn_analyze')}</span>`;}
 }
@@ -996,6 +1216,10 @@ function toast(msg){
 // ══ Init ══════════════════════════════════════════════════
 loadLanguage(currentLang); // loads translations → then calls loadHistory()
 loadStats();
+renderFavorites();
+renderPersonalCounter(parseInt(localStorage.getItem(PC_KEY)||'0'));
+// Load shared result if URL contains ?result=
+window.addEventListener('load',loadSharedResult);
 </script>
 </body>
 </html>

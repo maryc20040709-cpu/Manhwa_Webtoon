@@ -39,5 +39,13 @@
   "compare_drop": "Kapitel-2-Bild hier ablegen",
   "btn_compare_analyze": "✨ Kapitel 2 analysieren",
   "section_compare_result": "Kapitelvergleich",
-  "compare_more_panels": "mehr Panels"
+  "compare_more_panels": "mehr Panels",
+  "btn_fav_save": "Zu Favoriten hinzufügen",
+  "btn_fav_saved": "In Favoriten ❤️",
+  "fav_saved": "Gespeichert!",
+  "fav_removed": "Entfernt",
+  "section_favs": "Favoriten",
+  "personal_counter": "Du hast {n} Kapitel analysiert",
+  "err_no_panels": "Keine Panels gefunden. Versuche ein klareres Bild.",
+  "shared_loaded": "Geteiltes Ergebnis geladen!"
 }

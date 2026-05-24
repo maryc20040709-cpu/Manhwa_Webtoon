@@ -39,5 +39,13 @@
   "compare_drop": "Drop chapter 2 image here",
   "btn_compare_analyze": "✨ Analyze Chapter 2",
   "section_compare_result": "Chapter comparison",
-  "compare_more_panels": "more panels"
+  "compare_more_panels": "more panels",
+  "btn_fav_save": "Save to favourites",
+  "btn_fav_saved": "Saved to favourites ❤️",
+  "fav_saved": "Saved!",
+  "fav_removed": "Removed",
+  "section_favs": "Favourites",
+  "personal_counter": "You analysed {n} chapters",
+  "err_no_panels": "No panels detected. Try a clearer image.",
+  "shared_loaded": "Shared result loaded!"
 }

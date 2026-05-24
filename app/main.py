@@ -9,7 +9,7 @@ import os
 app = FastAPI(title="Manhwa/Webtoon Analyzer")
 
 from fastapi.staticfiles import StaticFiles
-from app.database import init_db, save_analysis, get_history, get_total_count
+from app.database import init_db, save_analysis, get_history, get_total_count, get_analysis_by_id
 
 init_db()
 
@@ -70,6 +70,7 @@ async def analyze(
     title: str = "Unknown",
     characters: str = "",
     lang: str = "en",
+    genre: str = "",
     min_area: int = 500,
     row_threshold: int = 50
 ):
@@ -88,11 +89,26 @@ async def analyze(
         chars = [c.strip() for c in characters.split(",") if c.strip()]
         generator = ScriptGenerator(title=title, characters=chars, lang=lang)
         recap = generator.generate_dramatic_recap()
-        save_analysis(title, characters, len(panels), len(scenes), recap)
-        return {"filename": file.filename, "panels_found": len(panels),
-                "total_scenes": len(scenes), "recap": recap}
+        result_id = save_analysis(
+            title, characters, len(panels), len(scenes), recap,
+            genre=genre or None
+        )
+        return {
+            "filename": file.filename,
+            "panels_found": len(panels),
+            "total_scenes": len(scenes),
+            "recap": recap,
+            "result_id": result_id,
+        }
     finally:
         os.unlink(tmp_path)
+
+@app.get("/result/{result_id}")
+def get_result(result_id: str):
+    result = get_analysis_by_id(result_id)
+    if not result:
+        raise HTTPException(status_code=404, detail="Result not found")
+    return result
 
 @app.get("/history")
 def get_analysis_history(limit: int = 10):

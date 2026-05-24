@@ -40,5 +40,13 @@
   "compare_drop": "Перетащи изображение главы 2",
   "btn_compare_analyze": "✨ Анализировать главу 2",
   "section_compare_result": "Сравнение глав",
-  "compare_more_panels": "больше панелей"
+  "compare_more_panels": "больше панелей",
+  "btn_fav_save": "Добавить в избранное",
+  "btn_fav_saved": "В избранном ❤️",
+  "fav_saved": "Сохранено!",
+  "fav_removed": "Удалено",
+  "section_favs": "Избранное",
+  "personal_counter": "Ты проанализировала {n} глав",
+  "err_no_panels": "Панели не найдены. Попробуй более чёткое изображение.",
+  "shared_loaded": "Результат по ссылке загружен!"
 }
