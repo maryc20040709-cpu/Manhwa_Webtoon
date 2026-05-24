@@ -67,11 +67,8 @@ class GeminiAnalyzer:
 
         try:
             import google.generativeai as genai
-            import PIL.Image
-            import io
 
             genai.configure(api_key=self.api_key)
-            model = genai.GenerativeModel("gemini-1.5-flash")
 
             language  = LANG_NAMES.get(lang, "English")
             chars_str = ", ".join(characters) if characters else "the main character"
@@ -89,9 +86,26 @@ class GeminiAnalyzer:
                 f'{{"recap": "your recap here", "mood": "one_mood_here"}}'
             )
 
-            img      = PIL.Image.open(io.BytesIO(image_bytes))
-            response = model.generate_content([prompt, img])
-            return self._parse(response.text)
+            image_part = genai.protos.Part(
+                inline_data=genai.protos.Blob(
+                    mime_type=mime_type or "image/jpeg",
+                    data=image_bytes,
+                )
+            )
+
+            # Try models in order — free-tier keys don't always have all models
+            for model_name in ["gemini-2.0-flash-exp", "gemini-2.0-flash", "gemini-1.5-flash-8b"]:
+                try:
+                    model    = genai.GenerativeModel(model_name)
+                    response = model.generate_content([image_part, prompt])
+                    result   = self._parse(response.text)
+                    if result:
+                        logger.info("Gemini OK with model: %s", model_name)
+                        return result
+                except Exception as exc:
+                    logger.warning("Model %s failed: %s", model_name, exc)
+                    continue
+            return None
 
         except Exception as exc:
             logger.warning("Gemini analysis failed: %s", exc)

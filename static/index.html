@@ -376,11 +376,11 @@ body.dark .fav-btn:hover,body.dark .fav-btn.saved{background:#2a0808}
     <div class="genre-row">
       <label class="genre-label" data-i18n="label_genre">Genre</label>
       <div class="genre-chips" id="genreChips">
-        <button class="genre-chip" onclick="selectGenre('shonen')">⚡ Shōnen</button>
-        <button class="genre-chip" onclick="selectGenre('shojo')">💕 Shōjo</button>
-        <button class="genre-chip" onclick="selectGenre('manhwa')">🇰🇷 Manhwa</button>
-        <button class="genre-chip" onclick="selectGenre('manhua')">🇨🇳 Manhua</button>
-        <button class="genre-chip" onclick="selectGenre('isekai')">🌀 Isekai</button>
+        <button class="genre-chip" type="button" data-genre="shonen">⚡ Shōnen</button>
+        <button class="genre-chip" type="button" data-genre="shojo">💕 Shōjo</button>
+        <button class="genre-chip" type="button" data-genre="manhwa">🇰🇷 Manhwa</button>
+        <button class="genre-chip" type="button" data-genre="manhua">🇨🇳 Manhua</button>
+        <button class="genre-chip" type="button" data-genre="isekai">🌀 Isekai</button>
       </div>
     </div>
     <button class="btn-analyze" id="analyzeBtn" onclick="analyze()">
@@ -679,12 +679,15 @@ function renderGenreChart(favs){
 // ══ Genre ════════════════════════════════════════════════
 let selectedGenre = null;
 function selectGenre(g){
-  selectedGenre = (selectedGenre === g) ? null : g; // toggle off if same
-  document.querySelectorAll('#genreChips .genre-chip').forEach((btn,i)=>{
-    const genres=['shonen','shojo','manhwa','manhua','isekai'];
-    btn.classList.toggle('active', genres[i]===selectedGenre);
+  selectedGenre = (selectedGenre === g) ? null : g;
+  document.querySelectorAll('#genreChips .genre-chip').forEach(btn=>{
+    btn.classList.toggle('active', btn.dataset.genre === selectedGenre);
   });
 }
+// Wire up genre chips via event listeners (more reliable than onclick attrs)
+document.querySelectorAll('#genreChips .genre-chip').forEach(btn=>{
+  btn.addEventListener('click', ()=>selectGenre(btn.dataset.genre));
+});
 const GENRE_LABELS={
   shonen:'⚡ Shōnen', shojo:'💕 Shōjo',
   manhwa:'🇰🇷 Manhwa', manhua:'🇨🇳 Manhua', isekai:'🌀 Isekai'
