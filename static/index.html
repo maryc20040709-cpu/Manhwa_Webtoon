@@ -528,6 +528,8 @@ async function loadLanguage(lang){
     updateLangBtns();
     loadHistory(); // always re-render history with correct language
     reRenderResult(); // update units and mood badge language
+    // Re-render personal counter now that translations are loaded
+    renderPersonalCounter(parseInt(localStorage.getItem(PC_KEY)||'0'));
   }catch(e){console.warn('i18n fail:',lang)}
 }
 
@@ -1243,10 +1245,9 @@ function toast(msg){
 }
 
 // ══ Init ══════════════════════════════════════════════════
-loadLanguage(currentLang); // loads translations → then calls loadHistory()
+loadLanguage(currentLang); // loads translations → applyTR → renderPersonalCounter
 loadStats();
 renderFavorites();
-renderPersonalCounter(parseInt(localStorage.getItem(PC_KEY)||'0'));
 // Load shared result if URL contains ?result=
 window.addEventListener('load',loadSharedResult);
 </script>
