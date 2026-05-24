@@ -687,7 +687,9 @@ async function analyze(){
     countUp(sEl,data.total_scenes);
 
     const mins=Math.max(1,Math.round(panels/3));
-    document.getElementById('readtimeVal').innerHTML=`${mins}<span class="stat-unit">${t('unit_min')}</span>`;
+    const rtEl=document.getElementById('readtimeVal');
+    rtEl.dataset.mins=mins;
+    rtEl.innerHTML=`${mins}<span class="stat-unit">${t('unit_min')}</span>`;
     document.getElementById('recapText').textContent=data.recap;
     showMood(data.recap);
 
@@ -707,13 +709,15 @@ function showError(msg){
 
 // ══ Re-render result on language switch ══════════════════
 function reRenderResult(){
-  if(!lastResult) return;
-  // update read time unit
-  document.getElementById('readtimeVal').innerHTML=
-    `${lastResult.mins}<span class="stat-unit">${t('unit_min')}</span>`;
-  // re-detect mood with current language keywords
-  showMood(lastResult.recap);
-  // update section label (already done by applyTR, but recap text stays)
+  // update read time unit (stored in data-attribute, survives language switch)
+  const rtEl=document.getElementById('readtimeVal');
+  const mins=rtEl.dataset.mins;
+  if(mins) rtEl.innerHTML=`${mins}<span class="stat-unit">${t('unit_min')}</span>`;
+  // re-detect mood using current recap text
+  const recap=document.getElementById('recapText').textContent;
+  if(recap&&recap!=='—') showMood(recap);
+  // re-render counter label
+  reRenderCounter();
 }
 
 // ══ History ═══════════════════════════════════════════════
@@ -749,6 +753,14 @@ function pluralAnalyses(n){
   if(n===1)return t('total_analyses_one');
   return t('total_analyses_other');
 }
+function reRenderCounter(){
+  const pill=document.getElementById('counterPill');
+  const n=parseInt(pill.dataset.count||'0');
+  if(!n) return;
+  const lbl=document.getElementById('counterLabel');
+  if(lbl) lbl.textContent=pluralAnalyses(n);
+}
+
 async function loadStats(){
   try{
     const res=await fetch('/stats');
@@ -758,6 +770,7 @@ async function loadStats(){
       const pill=document.getElementById('counterPill');
       const num=document.getElementById('counterNum');
       const lbl=document.getElementById('counterLabel');
+      pill.dataset.count=n;   // store for language switch
       pill.style.display='inline-flex';
       countUp(num,n,800);
       if(lbl)lbl.textContent=pluralAnalyses(n);
