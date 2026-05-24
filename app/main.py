@@ -1,6 +1,6 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from pydantic import BaseModel
-from app.core.script_generator import ScriptGenerator
+from app.core.script_generator import ScriptGenerator, GeminiAnalyzer
 from app.core.scene_grouper import SceneGrouper
 from app.core.panel_detector import PanelDetector
 import tempfile
@@ -87,18 +87,34 @@ async def analyze(
         grouper = SceneGrouper(row_threshold=row_threshold)
         scenes = grouper.group_scenes(panels)
         chars = [c.strip() for c in characters.split(",") if c.strip()]
-        generator = ScriptGenerator(title=title, characters=chars, lang=lang)
-        recap = generator.generate_dramatic_recap()
+
+        # ── Try real AI analysis first ──────────────────────────────────────
+        ai_mood = None
+        gemini  = GeminiAnalyzer()
+        ai      = gemini.analyze(
+            data, file.content_type or "image/jpeg",
+            title, chars, lang
+        )
+        if ai:
+            recap   = ai["recap"]
+            ai_mood = ai["mood"]       # e.g. "drama" — sent to frontend
+        else:
+            # Fall back to template-based recap
+            generator = ScriptGenerator(title=title, characters=chars, lang=lang)
+            recap     = generator.generate_dramatic_recap()
+
         result_id = save_analysis(
             title, characters, len(panels), len(scenes), recap,
             genre=genre or None
         )
         return {
-            "filename": file.filename,
+            "filename":     file.filename,
             "panels_found": len(panels),
             "total_scenes": len(scenes),
-            "recap": recap,
-            "result_id": result_id,
+            "recap":        recap,
+            "mood":         ai_mood,   # None when template was used
+            "result_id":    result_id,
+            "ai_powered":   ai is not None,
         }
     finally:
         os.unlink(tmp_path)

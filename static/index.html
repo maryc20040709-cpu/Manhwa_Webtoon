@@ -207,6 +207,11 @@ body.dark .error-box{background:#2a1010;border-color:#6b2020;color:#f08080}
 @keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 @keyframes toastOut{to{opacity:0;transform:translateX(-50%) translateY(6px)}}
 
+/* ── AI badge ────────────────────────────────────────────── */
+.ai-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;
+  padding:2px 8px;border-radius:10px;background:linear-gradient(135deg,#7B72D8,#3C2FA0);
+  color:#fff;letter-spacing:.03em;margin-left:8px;vertical-align:middle}
+
 /* ── Genre chips ─────────────────────────────────────────── */
 .genre-row{margin-bottom:1rem}
 .genre-label{font-size:13px;color:var(--sub);display:block;margin-bottom:7px}
@@ -798,6 +803,23 @@ function showMood(recap){
   badge.className='mood-badge '+(m?`mood-${m.id}`:'mood-neutral');
   badge.textContent=m?`${m.emoji} ${m.id[0].toUpperCase()+m.id.slice(1)}`:'—';
 }
+function showMoodDirect(moodId){
+  const badge=document.getElementById('moodBadge');
+  const m=MOODS.find(x=>x.id===moodId);
+  badge.className='mood-badge '+(m?`mood-${m.id}`:'mood-neutral');
+  badge.textContent=m?`${m.emoji} ${m.id[0].toUpperCase()+m.id.slice(1)}`:moodId;
+}
+function showAiBadge(aiPowered){
+  const label=document.querySelector('.recap-label');
+  if(!label)return;
+  const old=label.querySelector('.ai-badge');
+  if(old)old.remove();
+  if(aiPowered){
+    const b=document.createElement('span');
+    b.className='ai-badge';b.textContent='✦ AI';
+    label.appendChild(b);
+  }
+}
 
 // ══ Count-up animation ════════════════════════════════════
 function countUp(el,target,duration=600){
@@ -1089,7 +1111,11 @@ async function analyze(){
     rtEl.dataset.mins=mins;
     rtEl.innerHTML=`${mins}<span class="stat-unit">${t('unit_min')}</span>`;
     document.getElementById('recapText').textContent=data.recap;
-    showMood(data.recap);
+    // Use AI-detected mood if available, else keyword-detect from recap text
+    if(data.mood) showMoodDirect(data.mood);
+    else showMood(data.recap);
+    // Show AI badge on recap if Gemini was used
+    showAiBadge(data.ai_powered);
     showGenreTag();
 
     // store for language-switch re-render
