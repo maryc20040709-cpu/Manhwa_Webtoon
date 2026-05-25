@@ -38,7 +38,7 @@ VALID_MOODS = {"action", "romance", "drama", "mystery", "comedy"}
 LANG_NAMES  = {"en": "English", "de": "German", "ru": "Russian"}
 
 
-# ── Gemini Flash analyser ─────────────────────────────────────────────────────
+# ── Gemini Flash analyser (google-genai SDK) ──────────────────────────────────
 class GeminiAnalyzer:
     """Real AI image analysis — sends the panel image to Gemini Flash."""
 
@@ -59,16 +59,17 @@ class GeminiAnalyzer:
     ) -> dict | None:
         """
         Returns {"recap": str, "mood": str} based on what Gemini actually sees
-        in the image. Returns None if unavailable or on any error (caller falls
-        back to template).
+        in the image. Returns None if unavailable or on any error.
         """
         if not self.available:
+            logger.warning("GOOGLE_API_KEY not set — skipping Gemini")
             return None
 
         try:
-            import google.generativeai as genai
+            from google import genai
+            from google.genai import types
 
-            genai.configure(api_key=self.api_key)
+            client = genai.Client(api_key=self.api_key)
 
             language  = LANG_NAMES.get(lang, "English")
             chars_str = ", ".join(characters) if characters else "the main character"
@@ -86,25 +87,32 @@ class GeminiAnalyzer:
                 f'{{"recap": "your recap here", "mood": "one_mood_here"}}'
             )
 
-            image_part = genai.protos.Part(
-                inline_data=genai.protos.Blob(
-                    mime_type=mime_type or "image/jpeg",
-                    data=image_bytes,
-                )
-            )
-
             # Try models in order — free-tier keys don't always have all models
-            for model_name in ["gemini-2.0-flash-exp", "gemini-2.0-flash", "gemini-1.5-flash-8b"]:
+            for model_name in [
+                "gemini-2.0-flash",
+                "gemini-2.0-flash-lite",
+                "gemini-1.5-flash",
+                "gemini-1.5-flash-8b",
+            ]:
                 try:
-                    model    = genai.GenerativeModel(model_name)
-                    response = model.generate_content([image_part, prompt])
-                    result   = self._parse(response.text)
+                    response = client.models.generate_content(
+                        model=model_name,
+                        contents=[
+                            types.Part.from_bytes(
+                                data=image_bytes,
+                                mime_type=mime_type or "image/jpeg",
+                            ),
+                            prompt,
+                        ],
+                    )
+                    result = self._parse(response.text)
                     if result:
                         logger.info("Gemini OK with model: %s", model_name)
                         return result
                 except Exception as exc:
                     logger.warning("Model %s failed: %s", model_name, exc)
                     continue
+
             return None
 
         except Exception as exc:
@@ -114,12 +122,10 @@ class GeminiAnalyzer:
     # ── helpers ──────────────────────────────────────────────────────────────
     def _parse(self, text: str) -> dict | None:
         """Extract and validate JSON from Gemini's response."""
-        # 1. Try direct parse
         try:
             return self._validate(json.loads(text.strip()))
         except (json.JSONDecodeError, ValueError):
             pass
-        # 2. Try to find JSON object inside the text
         match = re.search(r'\{.*?\}', text, re.DOTALL)
         if match:
             try:
@@ -134,7 +140,7 @@ class GeminiAnalyzer:
         if not recap:
             raise ValueError("empty recap")
         if mood not in VALID_MOODS:
-            mood = "drama"          # safe default
+            mood = "drama"
         return {"recap": recap, "mood": mood}
 
 
