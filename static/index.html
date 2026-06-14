@@ -7,7 +7,7 @@
 <meta name="description" content="Upload a manhwa or webtoon panel — AI detects mood, counts panels, groups scenes, generates story recap and extracts colour palette. Free, no sign-up.">
 <meta property="og:title" content="Manhwa Webtoon Analyzer">
 <meta property="og:description" content="AI-powered manhwa analysis: mood detection, panel counting, story recap, colour palette — free and instant.">
-<meta property="og:url" content="https://manhwa-webtoon.onrender.com/static/index.html">
+<meta property="og:url" content="https://manhwa-webtoon.onrender.com/">
 <meta property="og:type" content="website">
 <meta property="og:image" content="https://manhwa-webtoon.onrender.com/static/logo.svg">
 <meta name="twitter:card" content="summary">
@@ -121,6 +121,12 @@ body.dark .dark-thumb{transform:translateX(16px);background:var(--accent)}
   padding:.9rem 1.1rem;color:#c0392b;font-size:14px;display:none;margin-top:.75rem}
 body.dark .error-box{background:#2a1010;border-color:#6b2020;color:#f08080}
 .error-box.visible{display:block}
+
+.cold-start-banner{background:#fff8e1;border:1px solid #ffe082;border-radius:10px;
+  padding:.8rem 1.1rem;color:#8a6d00;font-size:13.5px;display:none;margin-bottom:1rem;
+  text-align:center;animation:slideUp .4s ease}
+body.dark .cold-start-banner{background:#2a2410;border-color:#5a4a10;color:#f0d080}
+.cold-start-banner.visible{display:block}
 
 /* ── Results ─────────────────────────────────────────────── */
 .results-section{display:none;animation:slideUp .4s ease}
@@ -311,6 +317,8 @@ body.dark .fav-btn:hover,body.dark .fav-btn.saved{background:#2a0808}
 </head>
 <body>
 <div class="app">
+
+  <div class="cold-start-banner" id="coldStartBanner" data-i18n="cold_start_msg"></div>
 
   <!-- Header -->
   <div class="header">
@@ -589,7 +597,7 @@ function saveFavs(f){localStorage.setItem(FAV_KEY,JSON.stringify(f))}
 
 function toggleFavorite(){
   if(!lastResult)return;
-  const title=document.getElementById('titleInput').value.trim()||'Unknown';
+  const title=document.getElementById('titleInput').value.trim()||t('untitled_chapter');
   const fid=title+'_'+lastResult.panels;
   let favs=getFavs();
   const idx=favs.findIndex(f=>f.id===fid);
@@ -620,7 +628,7 @@ function toggleFavorite(){
 
 function checkFavBtn(){
   if(!lastResult)return;
-  const title=document.getElementById('titleInput').value.trim()||'Unknown';
+  const title=document.getElementById('titleInput').value.trim()||t('untitled_chapter');
   const fid=title+'_'+lastResult.panels;
   const saved=getFavs().some(f=>f.id===fid);
   const btn=document.getElementById('favBtn');
@@ -719,6 +727,20 @@ dropZone.addEventListener('drop',e=>{
 fileInput.addEventListener('change',()=>{if(fileInput.files[0])setFile(fileInput.files[0])});
 
 function setFile(f){
+  const errBox=document.getElementById('errorBox');
+  errBox.classList.remove('visible');
+
+  // iPhones default to HEIC/HEIF — and some browsers report an empty type
+  // for formats they don't recognise. Only JPG/PNG are accepted by the backend.
+  if(f.type!=='image/jpeg'&&f.type!=='image/png'){
+    showError(t('err_unsupported_format'));
+    return;
+  }
+  if(f.size>5*1024*1024){
+    showError(t('err_file_too_large'));
+    return;
+  }
+
   selectedFile=f;
   document.getElementById('dropFilename').textContent='✅ '+f.name;
   extractPalette(f);
@@ -839,14 +861,14 @@ function countUp(el,target,duration=600){
 
 // ══ Share ═════════════════════════════════════════════════
 function shareResult(){
-  const title=document.getElementById('titleInput').value.trim()||'Unknown';
+  const title=document.getElementById('titleInput').value.trim()||t('untitled_chapter');
   const panels=document.getElementById('panelsVal').textContent;
   const scenes=document.getElementById('scenesVal').textContent;
   const recap=document.getElementById('recapText').textContent;
   const mood=document.getElementById('moodBadge').textContent;
   const genreLine=selectedGenre?`\n🏷 ${t('label_genre')}: ${GENRE_LABELS[selectedGenre]||selectedGenre}`:'';
   const resultLink=lastResult&&lastResult.resultId
-    ?`\n🔗 manhwa-webtoon.onrender.com/static/index.html?result=${lastResult.resultId}`
+    ?`\n🔗 manhwa-webtoon.onrender.com/?result=${lastResult.resultId}`
     :'\n🔗 manhwa-webtoon.onrender.com';
   const text=`📖 ${title} — Manhwa Analysis\n🎭 ${t('label_mood')}: ${mood}${genreLine}\n📦 ${t('label_panels')}: ${panels}   🎬 ${t('label_scenes')}: ${scenes}\n\n💬 "${recap}"${resultLink}`;
   navigator.clipboard.writeText(text)
@@ -887,7 +909,7 @@ async function loadSharedResult(){
 
 // ══ PNG Export (Canvas) ═══════════════════════════════════
 function exportCard(){
-  const title=document.getElementById('titleInput').value.trim()||'Unknown';
+  const title=document.getElementById('titleInput').value.trim()||t('untitled_chapter');
   const panels=document.getElementById('panelsVal').textContent;
   const scenes=document.getElementById('scenesVal').textContent;
   const recap=document.getElementById('recapText').textContent;
@@ -1026,7 +1048,7 @@ async function analyzeCompare(){
   if(!compareFile){showError(t('err_no_file'));return;}
   if(!lastResult){showError('Analyze chapter 1 first.');return;}
   const title=document.getElementById('compareTitleInput').value.trim()||'Chapter 2';
-  const chars=document.getElementById('compareCharsInput').value.trim()||'Unknown';
+  const chars=document.getElementById('compareCharsInput').value.trim();
   const btn=document.getElementById('compareAnalyzeBtn');
   btn.disabled=true;
   btn.innerHTML=`<div class="spinner"></div><span>${t('btn_analyzing')}</span>`;
@@ -1074,8 +1096,8 @@ function showComparison(ch1,ch2){
 let lastResult = null;
 
 async function analyze(){
-  const title=document.getElementById('titleInput').value.trim()||'Unknown';
-  const chars=document.getElementById('charsInput').value.trim()||'Unknown';
+  const title=document.getElementById('titleInput').value.trim();
+  const chars=document.getElementById('charsInput').value.trim();
   const btn=document.getElementById('analyzeBtn');
   const errBox=document.getElementById('errorBox');
   errBox.classList.remove('visible');
@@ -1086,12 +1108,15 @@ async function analyze(){
 
   const form=new FormData();
   form.append('file',selectedFile);
+  const controller=new AbortController();
+  const timeoutId=setTimeout(()=>controller.abort(),60000);
   try{
     const url='/analyze?title='+encodeURIComponent(title)
       +'&characters='+encodeURIComponent(chars)
       +'&lang='+encodeURIComponent(currentLang)
       +(selectedGenre?'&genre='+encodeURIComponent(selectedGenre):'');
-    const res=await fetch(url,{method:'POST',body:form});
+    const res=await fetch(url,{method:'POST',body:form,signal:controller.signal});
+    clearTimeout(timeoutId);
     const data=await res.json();
     if(!res.ok){showError(data.detail||t('err_generic'));return;}
 
@@ -1133,8 +1158,17 @@ async function analyze(){
     loadHistory();
     loadStats();
     renderFavorites();
-  }catch(e){showError(t('err_connection'));}
-  finally{btn.disabled=false;btn.innerHTML=`<span data-i18n="btn_analyze">${t('btn_analyze')}</span>`;}
+
+    // Scroll the result into view — on tablets/mobile it sits below the fold
+    document.getElementById('resultsSection').scrollIntoView({behavior:'smooth',block:'start'});
+  }catch(e){
+    if(e.name==='AbortError') showError(t('err_timeout'));
+    else showError(t('err_connection'));
+  }
+  finally{
+    clearTimeout(timeoutId);
+    btn.disabled=false;btn.innerHTML=`<span data-i18n="btn_analyze">${t('btn_analyze')}</span>`;
+  }
 }
 
 function showError(msg){
@@ -1243,6 +1277,27 @@ function toast(msg){
   const el=document.createElement('div');el.className='toast';el.textContent=msg;
   document.body.appendChild(el);setTimeout(()=>el.remove(),2200);
 }
+
+// ══ Cold-start detection ═════════════════════════════════
+// Render's free tier spins down when idle — the first request can take
+// 30-50s. Ping /health right away and show a friendly banner if it's slow.
+(function(){
+  const banner=document.getElementById('coldStartBanner');
+  let settled=false;
+  const showTimer=setTimeout(()=>{
+    if(settled)return;
+    banner.textContent=t('cold_start_msg');
+    banner.classList.add('visible');
+  },1500);
+  fetch('/health').then(()=>{
+    settled=true;
+    clearTimeout(showTimer);
+    banner.classList.remove('visible');
+  }).catch(()=>{
+    settled=true;
+    clearTimeout(showTimer);
+  });
+})();
 
 // ══ Init ══════════════════════════════════════════════════
 loadLanguage(currentLang); // loads translations → applyTR → renderPersonalCounter

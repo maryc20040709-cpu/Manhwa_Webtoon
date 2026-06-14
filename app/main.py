@@ -1,4 +1,5 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from app.core.script_generator import ScriptGenerator, GeminiAnalyzer
 from app.core.scene_grouper import SceneGrouper
@@ -29,7 +30,12 @@ class ScenesRequest(BaseModel):
 
 @app.get("/")
 async def root():
-    return {"message": "Welcome to the Manhwa Webtoon API!"}
+    return FileResponse("static/index.html")
+
+@app.get("/health")
+def health_check():
+    """Lightweight endpoint the frontend pings to detect/trigger a cold start."""
+    return {"status": "ok"}
 
 @app.get("/stats")
 def get_stats():
@@ -67,7 +73,7 @@ async def detect_panels(file: UploadFile = File(...), min_area: int = 500):
 @app.post("/analyze")
 async def analyze(
     file: UploadFile = File(...),
-    title: str = "Unknown",
+    title: str = "",
     characters: str = "",
     lang: str = "en",
     genre: str = "",

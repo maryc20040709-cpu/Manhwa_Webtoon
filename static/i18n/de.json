@@ -47,5 +47,10 @@
   "section_favs": "Favoriten",
   "personal_counter": "Du hast {n} Kapitel analysiert",
   "err_no_panels": "Keine Panels gefunden. Versuche ein klareres Bild.",
-  "shared_loaded": "Geteiltes Ergebnis geladen!"
+  "shared_loaded": "Geteiltes Ergebnis geladen!",
+  "cold_start_msg": "⏳ Server wird gestartet — beim ersten Besuch kann das bis zu 30 Sekunden dauern.",
+  "untitled_chapter": "Kapitel ohne Titel",
+  "err_file_too_large": "Bild ist zu groß (max. 5 MB). Versuche ein kleineres Bild.",
+  "err_unsupported_format": "Dieses Bildformat wird nicht unterstützt. iPhone-Fotos werden oft als HEIC gespeichert — wandle sie zuerst in JPG/PNG um (Einstellungen → Kamera → Formate → Maximale Kompatibilität) oder mache stattdessen einen Screenshot.",
+  "err_timeout": "Die Anfrage hat zu lange gedauert. Der Server startet vielleicht noch — versuche es gleich noch einmal."
 }

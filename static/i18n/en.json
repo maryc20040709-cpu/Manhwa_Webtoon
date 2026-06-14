@@ -47,5 +47,10 @@
   "section_favs": "Favourites",
   "personal_counter": "You analysed {n} chapters",
   "err_no_panels": "No panels detected. Try a clearer image.",
-  "shared_loaded": "Shared result loaded!"
+  "shared_loaded": "Shared result loaded!",
+  "cold_start_msg": "⏳ Waking up the server — this can take up to 30 seconds on the first visit.",
+  "untitled_chapter": "Untitled chapter",
+  "err_file_too_large": "Image is too large (max 5 MB). Try a smaller image.",
+  "err_unsupported_format": "This image format isn't supported. iPhone photos are often saved as HEIC — please convert to JPG/PNG first (Settings → Camera → Formats → Most Compatible), or take a screenshot instead.",
+  "err_timeout": "The request timed out. The server might still be waking up — please try again in a moment."
 }

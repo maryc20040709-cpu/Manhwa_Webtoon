@@ -39,6 +39,20 @@ FALLBACK = {
 VALID_MOODS = {"action", "romance", "drama", "mystery", "comedy"}
 LANG_NAMES  = {"en": "English", "de": "German", "ru": "Russian"}
 
+# Used instead of a literal "Unknown" when no title was provided
+TITLE_FALLBACK = {
+    "en": "this chapter",
+    "de": "dieses Kapitel",
+    "ru": "эту главу",
+}
+
+
+def _display_title(title: str, lang: str) -> str:
+    title = (title or "").strip()
+    if title and title.lower() != "unknown":
+        return title
+    return TITLE_FALLBACK.get(lang, TITLE_FALLBACK["en"])
+
 
 # ── Groq Vision analyser (OpenAI-compatible API) ───────────────────────────────
 class GeminiAnalyzer:
@@ -70,12 +84,13 @@ class GeminiAnalyzer:
             return None
 
         try:
-            language  = LANG_NAMES.get(lang, "English")
-            chars_str = ", ".join(characters) if characters else "the main character"
+            language     = LANG_NAMES.get(lang, "English")
+            chars_str    = ", ".join(characters) if characters else "the main character"
+            title_display = _display_title(title, lang)
 
             prompt = (
                 f'You are analyzing a manhwa/webtoon chapter image.\n'
-                f'Title: "{title}"\n'
+                f'Title: "{title_display}"\n'
                 f'Main characters: {chars_str}\n\n'
                 f'Look carefully at the panels in this image. Based on what you actually SEE:\n\n'
                 f'1. Write a dramatic and engaging 1-2 sentence story recap in {language}. '
@@ -166,7 +181,8 @@ class ScriptGenerator:
         self.lang       = lang if lang in TEMPLATES else "en"
 
     def generate_dramatic_recap(self) -> str:
+        title_display = _display_title(self.title, self.lang)
         if not self.characters:
-            return FALLBACK[self.lang].format(title=self.title)
+            return FALLBACK[self.lang].format(title=title_display)
         char = random.choice(self.characters)
-        return random.choice(TEMPLATES[self.lang]).format(title=self.title, char=char)
+        return random.choice(TEMPLATES[self.lang]).format(title=title_display, char=char)
