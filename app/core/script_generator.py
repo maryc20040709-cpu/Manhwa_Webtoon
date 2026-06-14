@@ -2,7 +2,9 @@ import random
 import os
 import json
 import re
+import base64
 import logging
+import httpx
 
 logger = logging.getLogger(__name__)
 
@@ -38,12 +40,14 @@ VALID_MOODS = {"action", "romance", "drama", "mystery", "comedy"}
 LANG_NAMES  = {"en": "English", "de": "German", "ru": "Russian"}
 
 
-# ── Gemini Flash analyser (google-genai SDK) ──────────────────────────────────
+# ── Groq Vision analyser (OpenAI-compatible API) ───────────────────────────────
 class GeminiAnalyzer:
-    """Real AI image analysis — sends the panel image to Gemini Flash."""
+    """Real AI image analysis — sends the panel image to a Groq vision model."""
+
+    GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 
     def __init__(self):
-        self.api_key = os.environ.get("GOOGLE_API_KEY")
+        self.api_key = os.environ.get("GROQ_API_KEY")
 
     @property
     def available(self) -> bool:
@@ -58,19 +62,14 @@ class GeminiAnalyzer:
         lang: str,
     ) -> dict | None:
         """
-        Returns {"recap": str, "mood": str} based on what Gemini actually sees
+        Returns {"recap": str, "mood": str} based on what the model actually sees
         in the image. Returns None if unavailable or on any error.
         """
         if not self.available:
-            logger.warning("GOOGLE_API_KEY not set — skipping Gemini")
+            logger.warning("GROQ_API_KEY not set — skipping AI analysis")
             return None
 
         try:
-            from google import genai
-            from google.genai import types
-
-            client = genai.Client(api_key=self.api_key)
-
             language  = LANG_NAMES.get(lang, "English")
             chars_str = ", ".join(characters) if characters else "the main character"
 
@@ -87,27 +86,42 @@ class GeminiAnalyzer:
                 f'{{"recap": "your recap here", "mood": "one_mood_here"}}'
             )
 
-            # Try models in order — free-tier keys don't always have all models
+            b64_image = base64.b64encode(image_bytes).decode("utf-8")
+            data_url  = f"data:{mime_type or 'image/jpeg'};base64,{b64_image}"
+
+            headers = {
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json",
+            }
+
+            # Try models in order — in case one is unavailable
             for model_name in [
-                "gemini-2.0-flash",
-                "gemini-2.0-flash-lite",
-                "gemini-1.5-flash",
-                "gemini-1.5-flash-8b",
+                "meta-llama/llama-4-scout-17b-16e-instruct",
+                "meta-llama/llama-4-maverick-17b-128e-instruct",
             ]:
                 try:
-                    response = client.models.generate_content(
-                        model=model_name,
-                        contents=[
-                            types.Part.from_bytes(
-                                data=image_bytes,
-                                mime_type=mime_type or "image/jpeg",
-                            ),
-                            prompt,
+                    payload = {
+                        "model": model_name,
+                        "messages": [
+                            {
+                                "role": "user",
+                                "content": [
+                                    {"type": "text", "text": prompt},
+                                    {"type": "image_url", "image_url": {"url": data_url}},
+                                ],
+                            }
                         ],
+                        "temperature": 0.7,
+                        "max_tokens": 300,
+                    }
+                    response = httpx.post(
+                        self.GROQ_URL, headers=headers, json=payload, timeout=30.0
                     )
-                    result = self._parse(response.text)
+                    response.raise_for_status()
+                    content = response.json()["choices"][0]["message"]["content"]
+                    result = self._parse(content)
                     if result:
-                        logger.info("Gemini OK with model: %s", model_name)
+                        logger.info("Groq OK with model: %s", model_name)
                         return result
                 except Exception as exc:
                     logger.warning("Model %s failed: %s", model_name, exc)
@@ -116,12 +130,12 @@ class GeminiAnalyzer:
             return None
 
         except Exception as exc:
-            logger.warning("Gemini analysis failed: %s", exc)
+            logger.warning("Groq analysis failed: %s", exc)
             return None
 
     # ── helpers ──────────────────────────────────────────────────────────────
     def _parse(self, text: str) -> dict | None:
-        """Extract and validate JSON from Gemini's response."""
+        """Extract and validate JSON from the model's response."""
         try:
             return self._validate(json.loads(text.strip()))
         except (json.JSONDecodeError, ValueError):
