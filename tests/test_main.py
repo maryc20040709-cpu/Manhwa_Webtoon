@@ -4,9 +4,18 @@ from app.main import app
 client = TestClient(app)
 
 def test_root():
+    # "/" now serves the frontend directly (static/index.html) instead of a
+    # JSON welcome message, so the site opens at the bare domain root.
     response = client.get("/")
     assert response.status_code == 200
-    assert response.json() == {"message": "Welcome to the Manhwa Webtoon API!"}
+    assert "text/html" in response.headers["content-type"]
+    assert "Manhwa Webtoon Analyzer" in response.text
+
+
+def test_health():
+    response = client.get("/health")
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok"}
 
 def test_recap_basic():
     response = client.post("/recap", json={
