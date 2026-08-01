@@ -52,5 +52,6 @@
   "untitled_chapter": "Untitled chapter",
   "err_file_too_large": "Image is too large (max 5 MB). Try a smaller image.",
   "err_unsupported_format": "This image format isn't supported. iPhone photos are often saved as HEIC — please convert to JPG/PNG first (Settings → Camera → Formats → Most Compatible), or take a screenshot instead.",
-  "err_timeout": "The request timed out. The server might still be waking up — please try again in a moment."
+  "err_timeout": "The request timed out. The server might still be waking up — please try again in a moment.",
+  "err_rate_limit": "Too many analyses in a short time. Please wait a few minutes and try again."
 }

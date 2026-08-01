@@ -1057,7 +1057,11 @@ async function analyzeCompare(){
   try{
     const res=await fetch('/analyze?title='+encodeURIComponent(title)+'&characters='+encodeURIComponent(chars)+'&lang='+encodeURIComponent(currentLang),{method:'POST',body:form});
     const data=await res.json();
-    if(!res.ok){showError(data.detail||t('err_generic'));return;}
+    if(!res.ok){
+      if(res.status===429) showError(t('err_rate_limit'));
+      else showError(data.detail||t('err_generic'));
+      return;
+    }
     const ch2={title,panels:data.panels_found,scenes:data.total_scenes,recap:data.recap};
     const ch1title=document.getElementById('titleInput').value.trim()||'Chapter 1';
     const ch1={title:ch1title,panels:lastResult.panels,scenes:lastResult.scenes,recap:lastResult.recap};
@@ -1118,7 +1122,11 @@ async function analyze(){
     const res=await fetch(url,{method:'POST',body:form,signal:controller.signal});
     clearTimeout(timeoutId);
     const data=await res.json();
-    if(!res.ok){showError(data.detail||t('err_generic'));return;}
+    if(!res.ok){
+      if(res.status===429) showError(t('err_rate_limit'));
+      else showError(data.detail||t('err_generic'));
+      return;
+    }
 
     const panels=data.panels_found;
 

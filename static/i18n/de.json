@@ -52,5 +52,6 @@
   "untitled_chapter": "Kapitel ohne Titel",
   "err_file_too_large": "Bild ist zu groß (max. 5 MB). Versuche ein kleineres Bild.",
   "err_unsupported_format": "Dieses Bildformat wird nicht unterstützt. iPhone-Fotos werden oft als HEIC gespeichert — wandle sie zuerst in JPG/PNG um (Einstellungen → Kamera → Formate → Maximale Kompatibilität) oder mache stattdessen einen Screenshot.",
-  "err_timeout": "Die Anfrage hat zu lange gedauert. Der Server startet vielleicht noch — versuche es gleich noch einmal."
+  "err_timeout": "Die Anfrage hat zu lange gedauert. Der Server startet vielleicht noch — versuche es gleich noch einmal.",
+  "err_rate_limit": "Zu viele Analysen in kurzer Zeit. Bitte warte ein paar Minuten und versuche es erneut."
 }

@@ -1,13 +1,36 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException, Request
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from app.core.script_generator import ScriptGenerator, GeminiAnalyzer
 from app.core.scene_grouper import SceneGrouper
 from app.core.panel_detector import PanelDetector
+from collections import defaultdict
 import tempfile
 import os
+import time
 
 app = FastAPI(title="Manhwa/Webtoon Analyzer")
+
+# ── Simple in-memory rate limit for /analyze ────────────────────────────────
+# Keeps the free Groq quota from being burned by one visitor (accidental
+# reload-spam or abuse). In-memory is fine here: Render's free tier runs a
+# single instance, and it's OK if the counters reset on restart/deploy.
+RATE_LIMIT_WINDOW = 300   # seconds
+RATE_LIMIT_MAX = 15       # requests per IP per window
+_rate_limit_hits: dict[str, list[float]] = defaultdict(list)
+
+def _enforce_rate_limit(ip: str):
+    now = time.time()
+    hits = _rate_limit_hits[ip]
+    cutoff = now - RATE_LIMIT_WINDOW
+    while hits and hits[0] < cutoff:
+        hits.pop(0)
+    if len(hits) >= RATE_LIMIT_MAX:
+        raise HTTPException(
+            status_code=429,
+            detail="Too many requests. Please wait a few minutes and try again.",
+        )
+    hits.append(now)
 
 from fastapi.staticfiles import StaticFiles
 from app.database import init_db, save_analysis, get_history, get_total_count, get_analysis_by_id
@@ -36,6 +59,10 @@ async def root():
 def health_check():
     """Lightweight endpoint the frontend pings to detect/trigger a cold start."""
     return {"status": "ok"}
+
+@app.get("/robots.txt")
+async def robots():
+    return FileResponse("static/robots.txt")
 
 @app.get("/stats")
 def get_stats():
@@ -72,6 +99,7 @@ async def detect_panels(file: UploadFile = File(...), min_area: int = 500):
 
 @app.post("/analyze")
 async def analyze(
+    request: Request,
     file: UploadFile = File(...),
     title: str = "",
     characters: str = "",
@@ -80,6 +108,9 @@ async def analyze(
     min_area: int = 500,
     row_threshold: int = 50
 ):
+    client_ip = request.client.host if request.client else "unknown"
+    _enforce_rate_limit(client_ip)
+
     if file.content_type not in ["image/jpeg", "image/png"]:
         raise HTTPException(status_code=400, detail="Only JPG/PNG files allowed")
     data = await file.read()
