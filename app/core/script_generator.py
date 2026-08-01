@@ -128,8 +128,13 @@ class GeminiAnalyzer:
                             }
                         ],
                         "temperature": 0.7,
-                        "max_tokens": 300,
+                        "max_completion_tokens": 400,
                     }
+                    # Qwen 3.6 27B is a "thinking" model by default — it burns its
+                    # whole token budget on a <think>...</think> block and never
+                    # reaches the JSON answer. Disabling reasoning fixes that.
+                    if model_name.startswith("qwen/"):
+                        payload["reasoning_effort"] = "none"
                     response = httpx.post(
                         self.GROQ_URL, headers=headers, json=payload, timeout=30.0
                     )
