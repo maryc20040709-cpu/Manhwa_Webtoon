@@ -109,10 +109,11 @@ class GeminiAnalyzer:
                 "Content-Type": "application/json",
             }
 
-            # Try models in order — in case one is unavailable
+            # Groq deprecated the Llama-4 vision models (scout/maverick) — as of
+            # August 2026 the only vision-capable model on Groq is Qwen 3.6 27B.
+            # Kept as a list so we can add fallbacks again if Groq ships more.
             for model_name in [
-                "meta-llama/llama-4-scout-17b-16e-instruct",
-                "meta-llama/llama-4-maverick-17b-128e-instruct",
+                "qwen/qwen3.6-27b",
             ]:
                 try:
                     payload = {
