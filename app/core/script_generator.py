@@ -139,6 +139,14 @@ class GeminiAnalyzer:
                     if result:
                         logger.info("Groq OK with model: %s", model_name)
                         return result
+                    else:
+                        # The call succeeded but we couldn't extract valid JSON —
+                        # log the raw content so we can see what the model actually
+                        # returned (e.g. reasoning text, markdown fences, etc.)
+                        logger.warning(
+                            "Model %s returned unparseable content: %r",
+                            model_name, content[:500]
+                        )
                 except Exception as exc:
                     logger.warning("Model %s failed: %s", model_name, exc)
                     continue
@@ -152,11 +160,20 @@ class GeminiAnalyzer:
     # ── helpers ──────────────────────────────────────────────────────────────
     def _parse(self, text: str) -> dict | None:
         """Extract and validate JSON from the model's response."""
+        cleaned = text.strip()
+        # Some models wrap JSON in markdown code fences (```json ... ```)
+        cleaned = re.sub(r'^```(?:json)?\s*|\s*```$', '', cleaned, flags=re.IGNORECASE).strip()
+        # "Thinking" models may prepend reasoning in <think>...</think> tags
+        cleaned = re.sub(r'<think>.*?</think>', '', cleaned, flags=re.DOTALL).strip()
+
         try:
-            return self._validate(json.loads(text.strip()))
+            return self._validate(json.loads(cleaned))
         except (json.JSONDecodeError, ValueError):
             pass
-        match = re.search(r'\{.*?\}', text, re.DOTALL)
+
+        # Greedy match: grabs from the first '{' to the LAST '}' in the text,
+        # which survives extra preamble/explanation text around the JSON object.
+        match = re.search(r'\{.*\}', cleaned, re.DOTALL)
         if match:
             try:
                 return self._validate(json.loads(match.group()))
